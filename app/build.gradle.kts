@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.jfalck.killtimer"
+    namespace = "com.jfalck.musictimer"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.jfalck.killtimer"
+        applicationId = "com.jfalck.musictimer"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

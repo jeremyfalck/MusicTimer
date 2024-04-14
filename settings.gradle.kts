@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KillTimer"
+rootProject.name = "MusicTimer"
 include(":app")
