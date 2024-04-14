@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">KillTimer</string>
+    <string name="notification_channel_name">kill_timer_notification_channel</string>
+    <string name="notification_channel_desc">Used to notify about time remaining before requesting media sound focus</string>
+</resources>
