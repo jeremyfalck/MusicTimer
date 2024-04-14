@@ -76,32 +76,17 @@ class MainActivity : ComponentActivity() {
 
     private var initialSliderPosition: Float = 0f
 
-    private val localBroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            Log.d(TAG, "Local intent received with action: ${intent.action}")
-            if (intent.action == ACTION_STOP) {
-                service?.stopMuteTimer()
-            }
-        }
-    }
+
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onStart() {
         super.onStart()
         initMuteService()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                localBroadcastReceiver, IntentFilter(ACTION_STOP), RECEIVER_EXPORTED
-            )
-        } else {
-            registerReceiver(localBroadcastReceiver, IntentFilter(ACTION_STOP))
-        }
     }
 
 
     override fun onStop() {
         super.onStop()
-        unregisterReceiver(localBroadcastReceiver)
         if (isServiceBound) {
             unbindService(connection)
             isServiceBound = false
