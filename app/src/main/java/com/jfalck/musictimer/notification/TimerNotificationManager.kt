@@ -40,6 +40,7 @@ class TimerNotificationManager(
         .setContentText("MusicTimer is running")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setAutoCancel(false)
+        .setOngoing(true)
         .addAction(
             NotificationCompat.Action(
                 null,

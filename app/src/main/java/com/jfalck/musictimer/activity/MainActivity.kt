@@ -2,11 +2,9 @@ package com.jfalck.musictimer.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
@@ -17,14 +15,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +37,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jfalck.musictimer.data.DataStoreManager
 import com.jfalck.musictimer.di.KoinModules.IO_DISPATCHER_NAME
-import com.jfalck.musictimer.notification.TimerNotificationManager.Companion.ACTION_STOP
 import com.jfalck.musictimer.service.MuteBinder
 import com.jfalck.musictimer.service.MuteService
+import com.jfalck.musictimer.ui.AdmobBanner
 import com.jfalck.musictimer.ui.theme.MusicTimerTheme
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -51,14 +53,14 @@ class MainActivity : ComponentActivity() {
 
     private val dataStoreManager: DataStoreManager by inject()
     private val ioDispatcher: CoroutineDispatcher by inject(named(IO_DISPATCHER_NAME))
+    private val service: MuteBinder by inject()
 
-    private var service: MuteBinder? = null
     private var isServiceBound: Boolean = false
+
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             Log.d(TAG, "Service $name connected")
-            service = binder as? MuteBinder
             isServiceBound = true
         }
 
@@ -75,7 +77,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private var initialSliderPosition: Float = 0f
-
 
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -123,13 +124,14 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(ioDispatcher).launch {
             dataStoreManager.setLastTimeValueSelected(time)
         }
-        service?.startMuteTimer(time) ?: Log.d(TAG, "Service not bound")
+        service.startMuteTimer(time)
         Toast.makeText(this, "Timer started for $time minutes", Toast.LENGTH_SHORT).show()
     }
 
     private fun initView() =
         setContent {
             var sliderPosition by remember { mutableFloatStateOf(initialSliderPosition) }
+            val timerRunning by service.isTimerRunning.collectAsState()
             MusicTimerTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -137,7 +139,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         Slider(
                             modifier = Modifier.padding(16.dp),
@@ -155,11 +158,25 @@ class MainActivity : ComponentActivity() {
 
 
                         Button(
-                            onClick = { startTimer(sliderPosition.toInt()) },
+                            onClick = {
+                                if (timerRunning) {
+                                    service.stopMuteTimer()
+                                } else {
+                                    startTimer(sliderPosition.toInt())
+                                }
+                            },
                             modifier = Modifier.padding(16.dp),
                         ) {
-                            Text("Start Timer")
+                            Text(
+                                if (timerRunning) {
+                                    "Stop Timer"
+                                } else {
+                                    "Start Timer"
+                                }
+                            )
                         }
+                        Spacer(modifier = Modifier.weight(1f))
+                        AdmobBanner(modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -180,7 +197,8 @@ fun ActivityPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
             ) {
                 Slider(
                     modifier = Modifier.padding(16.dp),
@@ -201,6 +219,13 @@ fun ActivityPreview() {
                     onClick = {},
                     modifier = Modifier.padding(16.dp),
                 ) {
+                    Text("Start Timer")
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(), onClick = {}) {
                     Text("Start Timer")
                 }
             }

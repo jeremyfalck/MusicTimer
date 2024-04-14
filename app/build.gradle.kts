@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    android.buildFeatures.buildConfig = true
     namespace = "com.jfalck.musictimer"
     compileSdk = 34
 
@@ -21,7 +22,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ADMOB_ID", "\"ca-app-pub-3940256099942544/9214589741\"")
+        }
         release {
+            buildConfigField("String", "ADMOB_ID", "\"ca-app-pub-2297732968203269/8358496774\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -70,4 +75,5 @@ dependencies {
 
     implementation(libs.koin.android)
     implementation(libs.datastore.preferences)
+    implementation(libs.play.services.ads)
 }
