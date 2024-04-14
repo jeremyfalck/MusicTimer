@@ -13,7 +13,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,10 +23,18 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "ADMOB_ID", "\"ca-app-pub-3940256099942544/9214589741\"")
+            buildConfigField(
+                "String",
+                "ADMOB_MAIN_BANNER_ID",
+                "\"ca-app-pub-3940256099942544/9214589741\""
+            )
         }
         release {
-            buildConfigField("String", "ADMOB_ID", "\"ca-app-pub-2297732968203269/8358496774\"")
+            buildConfigField(
+                "String",
+                "ADMOB_MAIN_BANNER_ID",
+                "\"ca-app-pub-2297732968203269/8358496774\""
+            )
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

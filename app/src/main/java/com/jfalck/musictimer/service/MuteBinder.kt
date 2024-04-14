@@ -33,7 +33,7 @@ class MuteBinder(
             override fun onTick(millisUntilFinished: Long) {
                 val minutes: Int =
                     ((millisUntilFinished / ONE_MINUTE_IN_MILLIS) + ONE_MINUTE).toInt()
-                timerNotificationManager.updateNotificationWithTime(minutes)
+                timerNotificationManager.updateNotificationWithTime(minutes, time)
             }
 
             override fun onFinish() {

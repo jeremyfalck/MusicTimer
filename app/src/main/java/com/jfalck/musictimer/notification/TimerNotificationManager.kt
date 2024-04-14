@@ -36,11 +36,11 @@ class TimerNotificationManager(
 
     private val builder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_timer)
-        .setContentTitle("MusicTimer")
-        .setContentText("MusicTimer is running")
+        .setContentTitle(context.getString(R.string.app_name))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setAutoCancel(false)
         .setOngoing(true)
+        .setProgress(100, 0, false)
         .addAction(
             NotificationCompat.Action(
                 null,
@@ -49,7 +49,7 @@ class TimerNotificationManager(
             )
         )
 
-    fun displayNotification(time: Int) {
+    fun displayNotification(timeRemaining: Int) {
         with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
                     context,
@@ -59,7 +59,7 @@ class TimerNotificationManager(
                 Log.d(TAG, "No permission to post notifications")
                 return@with
             }
-            builder.setContentText(getRemainingTimeText(time))
+            builder.setContentText(getRemainingTimeText(timeRemaining))
             CoroutineScope(ioDispatcher).launch {
                 dataStoreManager.incrementNotificationId()
                 val id = dataStoreManager.getNotificationId()
@@ -71,7 +71,7 @@ class TimerNotificationManager(
     }
 
     private fun getRemainingTimeText(time: Int): String =
-        "Music will stop playing in $time minutes"
+        context.getString(R.string.notification_message_remaining_time, time)
 
     fun createNotificationChannel() {
         Log.d(TAG, "creating notification channel")
@@ -87,9 +87,11 @@ class TimerNotificationManager(
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun updateNotificationWithTime(time: Int) {
-        Log.d(TAG, "updating notification with time $time")
-        builder.setContentText(getRemainingTimeText(time))
+    fun updateNotificationWithTime(remainingTime: Int, totalTime: Int) {
+        Log.d(TAG, "updating notification with time $remainingTime")
+        builder
+            .setContentText(getRemainingTimeText(remainingTime))
+            .setProgress(100, ((totalTime - remainingTime) * 100) / totalTime, false)
         CoroutineScope(ioDispatcher).launch {
             with(NotificationManagerCompat.from(context)) {
                 if (ActivityCompat.checkSelfPermission(

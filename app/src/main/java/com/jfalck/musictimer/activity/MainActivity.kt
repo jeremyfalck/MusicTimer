@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jfalck.musictimer.R
 import com.jfalck.musictimer.data.DataStoreManager
 import com.jfalck.musictimer.di.KoinModules.IO_DISPATCHER_NAME
 import com.jfalck.musictimer.service.MuteBinder
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
             dataStoreManager.setLastTimeValueSelected(time)
         }
         service.startMuteTimer(time)
-        Toast.makeText(this, "Timer started for $time minutes", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.timer_start_toast, time), Toast.LENGTH_SHORT).show()
     }
 
     private fun initView() =
@@ -167,13 +168,7 @@ class MainActivity : ComponentActivity() {
                             },
                             modifier = Modifier.padding(16.dp),
                         ) {
-                            Text(
-                                if (timerRunning) {
-                                    "Stop Timer"
-                                } else {
-                                    "Start Timer"
-                                }
-                            )
+                            Text(getString(if (timerRunning) R.string.stop_timer else R.string.start_timer))
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         AdmobBanner(modifier = Modifier.fillMaxWidth())
