@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+keystorecreds.txt
+
+musicTimer.jks
+
+app/release/app-release.aab
