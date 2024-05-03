@@ -77,7 +77,7 @@ class TimerNotificationManager(
         Log.d(TAG, "creating notification channel")
         val name = context.getString(R.string.notification_channel_name)
         val descriptionText = context.getString(R.string.notification_channel_desc)
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val importance = NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText
         }
