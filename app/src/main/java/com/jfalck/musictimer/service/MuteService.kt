@@ -14,8 +14,6 @@ import org.koin.android.ext.android.inject
 
 class MuteService : Service() {
 
-    private var ctx: Context? = null
-
     private val muteBinder: MuteBinder by inject()
 
     private val localBroadcastReceiver = object : BroadcastReceiver() {
@@ -36,7 +34,6 @@ class MuteService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Service Started")
-        ctx = this
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(

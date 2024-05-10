@@ -1,23 +1,28 @@
 package com.jfalck.musictimer.notification
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.EXTRA_NOTIFICATION_ID
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.TimerBroadcastReceiver
 import com.jfalck.musictimer.data.DataStoreManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+private const val TAG = "TimerNotificationManager"
 
 class TimerNotificationManager(
     private val context: Context,
@@ -41,6 +46,8 @@ class TimerNotificationManager(
         .setAutoCancel(false)
         .setOngoing(true)
         .setProgress(100, 0, false)
+        .setColorized(true)
+        .setColor(ContextCompat.getColor(context, R.color.primary))
         .addAction(
             NotificationCompat.Action(
                 null,
@@ -49,29 +56,43 @@ class TimerNotificationManager(
             )
         )
 
-    fun displayNotification(timeRemaining: Int) {
-        with(NotificationManagerCompat.from(context)) {
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.d(TAG, "No permission to post notifications")
-                return@with
-            }
-            builder.setContentText(getRemainingTimeText(timeRemaining))
-            CoroutineScope(ioDispatcher).launch {
-                dataStoreManager.incrementNotificationId()
-                val id = dataStoreManager.getNotificationId()
-                // notificationId is a unique int for each notification that you must define.
-                Log.d(TAG, "displaying notification with id $id")
-                notify(id, builder.build())
+    private fun getRemainingTimeText(time: Int): String =
+        context.getString(R.string.notification_message_remaining_time, time)
+
+    @SuppressLint("MissingPermission")
+    fun createOrUpdateNotification(timeRemaining: Int, totalTime: Int) {
+        Log.d(
+            TAG,
+            "displaying notification with $timeRemaining minutes remaining and $totalTime total minutes"
+        )
+        builder
+            .setContentText(getRemainingTimeText(timeRemaining))
+            .setProgress(100, ((totalTime - timeRemaining) * 100) / totalTime, false)
+        CoroutineScope(ioDispatcher).launch {
+            with(NotificationManagerCompat.from(context)) {
+                if (!hasNotficationPermission()) {
+                    Log.d(TAG, "No permission to post notifications")
+                    return@with
+                }
+                if (timeRemaining == totalTime) {
+                    dataStoreManager.incrementNotificationId()
+                }
+                val notificationId = dataStoreManager.getNotificationId()
+                Log.d(TAG, "displaying notification with id $notificationId")
+                notify(notificationId, builder.build())
             }
         }
     }
 
-    private fun getRemainingTimeText(time: Int): String =
-        context.getString(R.string.notification_message_remaining_time, time)
+    private fun hasNotficationPermission() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
 
     fun createNotificationChannel() {
         Log.d(TAG, "creating notification channel")
@@ -87,27 +108,6 @@ class TimerNotificationManager(
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun updateNotificationWithTime(remainingTime: Int, totalTime: Int) {
-        Log.d(TAG, "updating notification with time $remainingTime")
-        builder
-            .setContentText(getRemainingTimeText(remainingTime))
-            .setProgress(100, ((totalTime - remainingTime) * 100) / totalTime, false)
-        CoroutineScope(ioDispatcher).launch {
-            with(NotificationManagerCompat.from(context)) {
-                if (ActivityCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    Log.d(TAG, "No permission to post notifications")
-                    return@with
-                }
-                NotificationManagerCompat.from(context)
-                    .notify(dataStoreManager.getNotificationId(), builder.build())
-            }
-        }
-    }
-
     fun clearNotification() {
         Log.d(TAG, "clearing notification")
         CoroutineScope(ioDispatcher).launch {
@@ -115,9 +115,7 @@ class TimerNotificationManager(
         }
     }
 
-
     companion object {
-        private const val TAG = "TimerNotificationManager"
         private const val CHANNEL_ID = "MusicTimer"
 
         const val ACTION_STOP = "ACTION_STOP"

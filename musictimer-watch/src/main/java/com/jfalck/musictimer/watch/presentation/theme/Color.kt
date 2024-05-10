@@ -1,4 +1,4 @@
-package com.jfalck.musictimer.ui.theme
+package com.jfalck.musictimer.watch.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

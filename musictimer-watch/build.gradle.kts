@@ -4,8 +4,7 @@ plugins {
 }
 
 android {
-    android.buildFeatures.buildConfig = true
-    namespace = "com.jfalck.musictimer"
+    namespace = "com.jfalck.musictimer.watch"
     compileSdk = 34
 
     defaultConfig {
@@ -13,28 +12,15 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.2"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionName = "1.0"
         vectorDrawables {
             useSupportLibrary = true
         }
+
     }
 
     buildTypes {
-        debug {
-            buildConfigField(
-                "String",
-                "ADMOB_MAIN_BANNER_ID",
-                "\"ca-app-pub-3940256099942544/9214589741\""
-            )
-        }
         release {
-            buildConfigField(
-                "String",
-                "ADMOB_MAIN_BANNER_ID",
-                "\"ca-app-pub-2297732968203269/8358496774\""
-            )
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -65,24 +51,21 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+    implementation(libs.play.services.wearable)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.wear)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.datastore.core)
-    implementation(libs.play.services.wearable)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    implementation(libs.koin.android)
-    implementation(libs.datastore.preferences)
-    implementation(libs.play.services.ads)
 }

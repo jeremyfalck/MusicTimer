@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -155,6 +156,7 @@ class MainActivity : ComponentActivity() {
                         Text(
                             text = "${sliderPosition.toInt()} minutes",
                             modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.secondary
                         )
 
 
@@ -167,6 +169,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             modifier = Modifier.padding(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            )
                         ) {
                             Text(getString(if (timerRunning) R.string.stop_timer else R.string.start_timer))
                         }
