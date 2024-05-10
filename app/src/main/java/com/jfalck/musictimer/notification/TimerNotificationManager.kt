@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.EXTRA_NOTIFICATION_ID
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.TimerBroadcastReceiver
 import com.jfalck.musictimer.data.DataStoreManager
@@ -45,6 +46,8 @@ class TimerNotificationManager(
         .setAutoCancel(false)
         .setOngoing(true)
         .setProgress(100, 0, false)
+        .setColorized(true)
+        .setColor(ContextCompat.getColor(context, R.color.primary))
         .addAction(
             NotificationCompat.Action(
                 null,

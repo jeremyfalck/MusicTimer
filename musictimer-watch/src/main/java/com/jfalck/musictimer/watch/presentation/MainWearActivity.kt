@@ -33,6 +33,7 @@ import androidx.core.view.InputDeviceCompat
 import androidx.core.view.MotionEventCompat
 import androidx.core.view.ViewConfigurationCompat
 import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
@@ -63,8 +64,6 @@ class MainWearActivity : ComponentActivity() {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
-
-        setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
             WearApp(launchTimer, initialSliderPosition, timeSelection)
@@ -143,7 +142,7 @@ fun WearApp(onLaunchTimer: () -> Unit, initialSliderPosition: MutableFloatState,
         ) {
             TimeText()
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "time selected: $time minutes", modifier = Modifier.padding(16.dp))
+                Text(text = "time selected: $time minutes", modifier = Modifier.padding(16.dp), color = MaterialTheme.colors.secondary)
                 TimerButton(onLaunchTimer)
             }
             CircularProgressIndicator(
@@ -162,6 +161,10 @@ fun WearApp(onLaunchTimer: () -> Unit, initialSliderPosition: MutableFloatState,
 @Composable
 fun TimerButton(onClick: () -> Unit) {
     Chip(
+        colors = ChipDefaults.chipColors(
+            backgroundColor = MaterialTheme.colors.primary,
+            contentColor = MaterialTheme.colors.onPrimary
+        ),
         modifier = Modifier.wrapContentSize(),
         onClick = { onClick() },
         label = {

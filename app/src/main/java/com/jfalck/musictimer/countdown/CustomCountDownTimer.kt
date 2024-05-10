@@ -25,14 +25,16 @@ class CustomCountDownTimer(
 
     private var job: Job? = null
 
-    private val unit = if (BuildConfig.DEBUG) "seconds" else "minutes"
+    private val useSeconds = false
+
+    private val unit = if (useSeconds) "seconds" else "minutes"
 
     private val flow =
         (totalMinutes - 1 downTo 0).asFlow() // Emit total - 1 because the first was emitted onStart
             .onEach {
                 Log.d(TAG, "Emitting $unit: $it")
                 delay(
-                    if (BuildConfig.DEBUG) 1000 else 60000)
+                    if (useSeconds) 1000 else 60000)
             } // Each minute later emit a number
             .onStart {
                 Log.d(TAG, "Total $unit: $totalMinutes")
