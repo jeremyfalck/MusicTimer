@@ -1,9 +1,7 @@
 package com.jfalck.musictimer
 
 interface MuteTimerManager {
-    fun startMuteTimer(time: Int)
+    fun startMuteTimer(timeInMinutes: Int)
 
-    fun stopMuteTimer() {
-        TODO("Not yet implemented")
-    }
+    fun stopMuteTimer()
 }

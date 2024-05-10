@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MusicTimer"
 include(":app")
+include(":musictimer-watch")

@@ -2,13 +2,15 @@ package com.jfalck.musictimer.service
 
 import android.annotation.SuppressLint
 import android.os.Binder
-import android.os.CountDownTimer
 import android.util.Log
 import com.jfalck.musictimer.MuteTimerManager
+import com.jfalck.musictimer.countdown.CustomCountDownTimer
 import com.jfalck.musictimer.manager.MuteManager
 import com.jfalck.musictimer.notification.TimerNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+
+private const val TAG = "MuteBinder"
 
 @SuppressLint("UnspecifiedRegisterReceiverFlag")
 class MuteBinder(
@@ -20,47 +22,42 @@ class MuteBinder(
         timerNotificationManager.createNotificationChannel()
     }
 
-    private var countDownTimer: CountDownTimer? = null
+    private var countDownTimer: CustomCountDownTimer? = null
 
     private var _isTimerRunning: MutableStateFlow<Boolean> = MutableStateFlow(false)
     var isTimerRunning: StateFlow<Boolean> = _isTimerRunning
 
-    override fun startMuteTimer(time: Int) {
+    override fun startMuteTimer(timeInMinutes: Int) {
+        Log.d(TAG, "@${hashCode()} Timer task started")
 
-        val millis = time.toLong() * ONE_MINUTE_IN_MILLIS
+        countDownTimer?.let {
+            Log.d(TAG, "@${this@MuteBinder.hashCode()} Cancelling previous countdown timer")
+            it.cancel()
+        }
+        timerNotificationManager.clearNotification()
 
-        countDownTimer = object : CountDownTimer(millis, ONE_MINUTE_IN_MILLIS) {
-            override fun onTick(millisUntilFinished: Long) {
-                val minutes: Int =
-                    ((millisUntilFinished / ONE_MINUTE_IN_MILLIS) + ONE_MINUTE).toInt()
-                timerNotificationManager.updateNotificationWithTime(minutes, time)
-            }
-
-            override fun onFinish() {
-                timerNotificationManager.clearNotification()
-                Log.d(TAG, "Timer task executed")
-                muteManager.requestMediaFocus()
-                _isTimerRunning.value = false
-            }
+        countDownTimer = CustomCountDownTimer(timeInMinutes, { minutesUntilFinished ->
+            Log.d(TAG, "@${this@MuteBinder.hashCode()} Timer task ticked")
+            timerNotificationManager.createOrUpdateNotification(minutesUntilFinished, timeInMinutes)
+        }, {
+            timerNotificationManager.clearNotification()
+            Log.d(TAG, "@${this@MuteBinder.hashCode()} Timer task executed")
+            muteManager.requestMediaFocus()
+            _isTimerRunning.value = false
+        }).apply {
+            start()
         }
 
-        countDownTimer?.start()
         _isTimerRunning.value = true
-
-        timerNotificationManager.displayNotification(time)
     }
 
     override fun stopMuteTimer() {
-        Log.d(TAG, "Timer task stopped")
-        countDownTimer?.cancel()
+        Log.d(TAG, "@${hashCode()} Timer task stopped")
+        countDownTimer?.let {
+            Log.d(TAG, "@${hashCode()} Cancelling countdown timer")
+            it.cancel()
+        }
         timerNotificationManager.clearNotification()
         _isTimerRunning.value = false
-    }
-
-
-    companion object {
-        private const val TAG = "MuteBinder"
-        private const val ONE_MINUTE_IN_MILLIS = 60000L
-        private const val ONE_MINUTE = 1
     }
 }

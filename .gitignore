@@ -19,3 +19,5 @@ keystorecreds.txt
 musicTimer.jks
 
 app/release/app-release.aab
+
+.idea/
