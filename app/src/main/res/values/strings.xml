@@ -7,4 +7,5 @@
     <string name="start_timer">Start timer</string>
     <string name="stop_timer">Stop timer</string>
     <string name="stop">Stop</string>
+    <string name="timer_tile_label">Start music timer</string>
 </resources>

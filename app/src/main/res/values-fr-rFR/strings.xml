@@ -8,4 +8,5 @@
     <string name="start_timer">Lancer le timer</string>
     <string name="stop_timer">Arrêter le timer</string>
     <string name="stop">Arrêter</string>
+    <string name="timer_tile_label">Lancer le timer</string>
 </resources>
