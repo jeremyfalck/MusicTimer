@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -134,7 +135,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             var sliderPosition by remember { mutableFloatStateOf(initialSliderPosition) }
             val timerRunning by service.isTimerRunning.collectAsState()
-            MusicTimerTheme {
+            MusicTimerTheme(
+                darkTheme = isSystemInDarkTheme()
+            ) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
