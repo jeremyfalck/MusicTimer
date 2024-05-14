@@ -20,5 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "MusicTimer"
-include(":app")
+include(":musictimer-app")
 include(":musictimer-watch")
+include(":musictimer-common")
