@@ -1,35 +1,30 @@
 package com.jfalck.musictimer.service
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.wearable.MessageEvent
-import com.google.android.gms.wearable.WearableListenerService
 import com.jfalck.musictimer.R
-import org.koin.android.ext.android.inject
+import com.jfalck.musictimer_common.service.IWearMessageProcessor
 
 
-private const val TAG = "WearService"
+private const val TAG = "WatchWearMessageProcessor"
 private const val MESSAGE_PATH = "/timer"
 private const val TIMER_STOP_PATH = "/stop_timer"
 
-class WearService : WearableListenerService() {
+class WatchWearMessageProcessor(private val context: Context, private val muteBinder: MuteBinder) :
+    IWearMessageProcessor {
 
-    private val muteBinder: MuteBinder by inject()
-
-    override fun onMessageReceived(messageEvent: MessageEvent) {
-        super.onMessageReceived(messageEvent)
-
-        val time = messageEvent.data.decodeToString().toIntOrNull()
-        Log.i(TAG, "onMessageReceived(): $time")
+    override fun processMessage(messageEvent: MessageEvent) {
         when (messageEvent.path) {
             MESSAGE_PATH -> {
-                Log.i(TAG, "Service: message (/timer) received: $time")
-
+                val time = messageEvent.data.decodeToString().toIntOrNull()
+                Log.i(TAG, "Service: message ($MESSAGE_PATH) received: $time")
                 if (time != null) {
                     muteBinder.startMuteTimer(time)
                     Toast.makeText(
-                        this@WearService,
-                        getString(R.string.timer_start_toast, time),
+                        context,
+                        context.getString(R.string.timer_start_toast, time),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -38,7 +33,7 @@ class WearService : WearableListenerService() {
             }
 
             TIMER_STOP_PATH -> {
-                Log.i(TAG, "Service: message (/stop_timer) received")
+                Log.i(TAG, "Service: message ($TIMER_STOP_PATH) received")
                 muteBinder.stopMuteTimer()
 
             }

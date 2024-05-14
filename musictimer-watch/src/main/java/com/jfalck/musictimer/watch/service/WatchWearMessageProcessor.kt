@@ -2,28 +2,24 @@ package com.jfalck.musictimer.watch.service
 
 import android.util.Log
 import com.google.android.gms.wearable.MessageEvent
-import com.google.android.gms.wearable.WearableListenerService
 import com.jfalck.musictimer.watch.repository.TimerRunningRepository
+import com.jfalck.musictimer_common.service.IWearMessageProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 
-private const val TAG = "WearService"
+private const val TAG = "WatchWearMessageProcessor"
 private const val TIMER_RUNNING = "/timer_state"
 
-class WearMessagingService : WearableListenerService() {
+class WatchWearMessageProcessor(private val timerRunningRepository: TimerRunningRepository) :
+    IWearMessageProcessor {
 
-    private val timerRunningRepository: TimerRunningRepository by inject()
-
-    override fun onMessageReceived(messageEvent: MessageEvent) {
-        super.onMessageReceived(messageEvent)
-        Log.i(TAG, "onMessageReceived(): $messageEvent")
+    override fun processMessage(messageEvent: MessageEvent) {
         when (messageEvent.path) {
             TIMER_RUNNING -> {
                 val isTimerRunning = messageEvent.data.decodeToString().toBooleanStrictOrNull()
-                Log.i(TAG, "Service: message ($TIMER_RUNNING) received: $isTimerRunning")
+                Log.i(TAG, "message ($TIMER_RUNNING) received: $isTimerRunning")
 
                 if (isTimerRunning != null) {
                     CoroutineScope(Dispatchers.IO).launch {
