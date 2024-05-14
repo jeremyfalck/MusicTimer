@@ -1,25 +1,23 @@
-package com.jfalck.musictimer.wear
+package com.jfalck.musictimer_common.wear
 
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
-import java.nio.charset.Charset
 import kotlin.coroutines.cancellation.CancellationException
 
-private const val TAG = "WearableMessageSender"
+private const val TAG = "MusicTimerWearableMessageSender"
 
-class WearableMessageSender(context: Context) {
+class MusicTimerWearableMessageSender(context: Context) {
 
     private val messageClient: MessageClient = Wearable.getMessageClient(context)
 
-
-    fun sendTimerState(isRunning: Boolean) {
+    fun sendWearableMessage(path: String, data: ByteArray? = null) {
         try {
             messageClient.sendMessage(
                 "com.jfalck.musictimer",
-                "/timer_state",
-                isRunning.toString().toByteArray(charset = Charset.defaultCharset())
+                path,
+                data
             ).apply {
                 addOnSuccessListener {
                     Log.i(TAG, "sendMessage OnSuccessListener")
@@ -34,5 +32,4 @@ class WearableMessageSender(context: Context) {
             Log.d(TAG, "Saving DataItem failed: $exception")
         }
     }
-
 }

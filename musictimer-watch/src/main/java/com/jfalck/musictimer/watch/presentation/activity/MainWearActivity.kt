@@ -1,4 +1,4 @@
-package com.jfalck.musictimer.watch.presentation
+package com.jfalck.musictimer.watch.presentation.activity
 
 import android.os.Bundle
 import android.util.Log
@@ -40,12 +40,14 @@ import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
-import com.google.android.gms.wearable.Wearable
 import com.jfalck.musictimer.watch.R
 import com.jfalck.musictimer.watch.presentation.theme.MusicTimerTheme
+import com.jfalck.musictimer.watch.presentation.viewmodel.TimerRunningViewModel
+import com.jfalck.musictimer.watch.presentation.wear.WearableMessageManager
+import com.jfalck.musictimer_common.wear.MusicTimerWearableMessageSender
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.nio.charset.Charset
-import kotlin.coroutines.cancellation.CancellationException
 
 private const val TAG = "MainWearActivity"
 
@@ -53,7 +55,7 @@ class MainWearActivity : ComponentActivity() {
 
     private val timerRunningViewModel: TimerRunningViewModel by viewModel()
 
-    private val messageClient by lazy { Wearable.getMessageClient(this) }
+    private val wearableMessageManager: WearableMessageManager by inject()
 
     private var initialSliderPosition: MutableFloatState = mutableFloatStateOf(0f)
 
@@ -62,10 +64,10 @@ class MainWearActivity : ComponentActivity() {
     private val launchTimer: ((Boolean) -> Unit) = { isTimerRunning ->
         if (isTimerRunning) {
             Log.d("Timer", "Timer stopped")
-            stopTimerOnPhone()
+            wearableMessageManager.stopTimerOnPhone()
         } else {
             Log.d("Timer", "Timer launched")
-            startTimerOnPhone(timeSelection.intValue)
+            wearableMessageManager.startTimerOnPhone(timeSelection.intValue)
         }
     }
 
@@ -116,46 +118,7 @@ class MainWearActivity : ComponentActivity() {
         }
     }
 
-    private fun startTimerOnPhone(time: Int) {
-        try {
-            messageClient.sendMessage(
-                "com.jfalck.musictimer",
-                "/timer",
-                time.toString().toByteArray(charset = Charset.defaultCharset())
-            ).apply {
-                addOnSuccessListener {
-                    Log.i(TAG, "sendMessage OnSuccessListener")
-                }
-                addOnFailureListener {
-                    Log.i(TAG, "sendMessage OnFailureListener")
-                }
-            }
-        } catch (cancellationException: CancellationException) {
-            throw cancellationException
-        } catch (exception: Exception) {
-            Log.d(TAG, "Saving DataItem failed: $exception")
-        }
-    }
 
-    private fun stopTimerOnPhone() {
-        try {
-            messageClient.sendMessage(
-                "com.jfalck.musictimer",
-                "/stop_timer", null
-            ).apply {
-                addOnSuccessListener {
-                    Log.i(TAG, "sendMessage OnSuccessListener")
-                }
-                addOnFailureListener {
-                    Log.i(TAG, "sendMessage OnFailureListener")
-                }
-            }
-        } catch (cancellationException: CancellationException) {
-            throw cancellationException
-        } catch (exception: Exception) {
-            Log.d(TAG, "Saving DataItem failed: $exception")
-        }
-    }
 }
 
 @Composable

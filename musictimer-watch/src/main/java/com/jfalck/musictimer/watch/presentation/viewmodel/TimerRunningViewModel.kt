@@ -1,4 +1,4 @@
-package com.jfalck.musictimer.watch.presentation
+package com.jfalck.musictimer.watch.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.jfalck.musictimer.watch.repository.TimerRunningRepository
