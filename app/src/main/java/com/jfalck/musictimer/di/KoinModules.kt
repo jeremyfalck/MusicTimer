@@ -4,6 +4,7 @@ import com.jfalck.musictimer.data.DataStoreManager
 import com.jfalck.musictimer.manager.MuteManager
 import com.jfalck.musictimer.notification.TimerNotificationManager
 import com.jfalck.musictimer.service.MuteBinder
+import com.jfalck.musictimer.wear.WearableMessageSender
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.koin.androidContext
@@ -23,7 +24,9 @@ object KoinModules {
         single<TimerNotificationManager> {
             TimerNotificationManager(androidContext(), get(), get(named(IO_DISPATCHER_NAME)))
         }
-        single<MuteBinder> { MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME))) }
+        single<WearableMessageSender> { WearableMessageSender(androidContext()) }
+
+        single<MuteBinder> { MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME)), get()) }
 
         single<CoroutineDispatcher>(named(IO_DISPATCHER_NAME)) { Dispatchers.IO }
         single<CoroutineDispatcher>(named(DEFAULT_DISPATCHER_NAME)) { Dispatchers.Default }

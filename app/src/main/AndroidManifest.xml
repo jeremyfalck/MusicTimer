@@ -32,7 +32,15 @@
                 <data
                     android:host="*"
                     android:pathPrefix="/timer"
-                    android:scheme="wear" />
+                    android:scheme="wear"
+                    tools:ignore="IntentFilterUniqueDataAttributes" />
+
+                <data
+                    android:host="*"
+                    android:pathPrefix="/stop_timer"
+                    android:scheme="wear"
+                    tools:ignore="IntentFilterUniqueDataAttributes" />
+
             </intent-filter>
         </service>
 

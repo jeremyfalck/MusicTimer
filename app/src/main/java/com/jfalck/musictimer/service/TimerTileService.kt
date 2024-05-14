@@ -35,9 +35,6 @@ class TimerTileService : TileService() {
     // Called when your app can no longer update your tile.
     override fun onStopListening() {
         Log.d(TAG, "Stopping listening")
-       /* CoroutineScope(Dispatchers.IO).launch {
-            timerListeningJob?.cancelAndJoin()
-        }*/
         super.onStopListening()
     }
 

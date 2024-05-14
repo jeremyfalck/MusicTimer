@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,6 +43,7 @@ import androidx.wear.compose.material.TimeText
 import com.google.android.gms.wearable.Wearable
 import com.jfalck.musictimer.watch.R
 import com.jfalck.musictimer.watch.presentation.theme.MusicTimerTheme
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.nio.charset.Charset
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -49,15 +51,22 @@ private const val TAG = "MainWearActivity"
 
 class MainWearActivity : ComponentActivity() {
 
+    private val timerRunningViewModel: TimerRunningViewModel by viewModel()
+
     private val messageClient by lazy { Wearable.getMessageClient(this) }
 
     private var initialSliderPosition: MutableFloatState = mutableFloatStateOf(0f)
 
     private var timeSelection: MutableIntState = mutableIntStateOf(0)
 
-    private val launchTimer: (() -> Unit) = {
-        Log.d("Timer", "Timer launched")
-        sendToHandheldDevice(timeSelection.intValue)
+    private val launchTimer: ((Boolean) -> Unit) = { isTimerRunning ->
+        if (isTimerRunning) {
+            Log.d("Timer", "Timer stopped")
+            stopTimerOnPhone()
+        } else {
+            Log.d("Timer", "Timer launched")
+            startTimerOnPhone(timeSelection.intValue)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +75,9 @@ class MainWearActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            WearApp(launchTimer, initialSliderPosition, timeSelection)
+
+            val isTimerRunning by timerRunningViewModel.timerRunningLiveData.collectAsState(initial = false)
+            WearApp(launchTimer, initialSliderPosition, timeSelection, isTimerRunning)
         }
     }
 
@@ -84,9 +95,9 @@ class MainWearActivity : ComponentActivity() {
 
             initialSliderPosition.floatValue += delta / 13600
 
-            if(initialSliderPosition.floatValue > 1f) {
+            if (initialSliderPosition.floatValue > 1f) {
                 initialSliderPosition.floatValue = 1f
-            } else if(initialSliderPosition.floatValue < 0f) {
+            } else if (initialSliderPosition.floatValue < 0f) {
                 initialSliderPosition.floatValue = 0f
             }
 
@@ -105,7 +116,7 @@ class MainWearActivity : ComponentActivity() {
         }
     }
 
-    private fun sendToHandheldDevice(time: Int) {
+    private fun startTimerOnPhone(time: Int) {
         try {
             messageClient.sendMessage(
                 "com.jfalck.musictimer",
@@ -125,10 +136,35 @@ class MainWearActivity : ComponentActivity() {
             Log.d(TAG, "Saving DataItem failed: $exception")
         }
     }
+
+    private fun stopTimerOnPhone() {
+        try {
+            messageClient.sendMessage(
+                "com.jfalck.musictimer",
+                "/stop_timer", null
+            ).apply {
+                addOnSuccessListener {
+                    Log.i(TAG, "sendMessage OnSuccessListener")
+                }
+                addOnFailureListener {
+                    Log.i(TAG, "sendMessage OnFailureListener")
+                }
+            }
+        } catch (cancellationException: CancellationException) {
+            throw cancellationException
+        } catch (exception: Exception) {
+            Log.d(TAG, "Saving DataItem failed: $exception")
+        }
+    }
 }
 
 @Composable
-fun WearApp(onLaunchTimer: () -> Unit, initialSliderPosition: MutableFloatState, timeSelection: MutableIntState) {
+fun WearApp(
+    onLaunchTimer: (Boolean) -> Unit,
+    initialSliderPosition: MutableFloatState,
+    timeSelection: MutableIntState,
+    isTimerRunning: Boolean
+) {
 
     val sliderPosition by remember { initialSliderPosition }
     val time by remember { timeSelection }
@@ -142,8 +178,12 @@ fun WearApp(onLaunchTimer: () -> Unit, initialSliderPosition: MutableFloatState,
         ) {
             TimeText()
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "time selected: $time minutes", modifier = Modifier.padding(16.dp), color = MaterialTheme.colors.secondary)
-                TimerButton(onLaunchTimer)
+                Text(
+                    text = "time selected: $time minutes",
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colors.secondary
+                )
+                TimerButton(onLaunchTimer, isTimerRunning)
             }
             CircularProgressIndicator(
                 modifier = Modifier
@@ -159,17 +199,17 @@ fun WearApp(onLaunchTimer: () -> Unit, initialSliderPosition: MutableFloatState,
 }
 
 @Composable
-fun TimerButton(onClick: () -> Unit) {
+fun TimerButton(onClick: (Boolean) -> Unit, isTimerRunning: Boolean) {
     Chip(
         colors = ChipDefaults.chipColors(
             backgroundColor = MaterialTheme.colors.primary,
             contentColor = MaterialTheme.colors.onPrimary
         ),
         modifier = Modifier.wrapContentSize(),
-        onClick = { onClick() },
+        onClick = { onClick(isTimerRunning) },
         label = {
             Text(
-                text = stringResource(id = R.string.start_timer),
+                text = stringResource(id = if (isTimerRunning) R.string.stop_timer else R.string.start_timer),
                 maxLines = 1,
                 color = MaterialTheme.colors.onPrimary,
                 overflow = TextOverflow.Ellipsis
@@ -189,5 +229,5 @@ fun TimerButton(onClick: () -> Unit) {
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    WearApp({}, mutableFloatStateOf(0.5f), mutableIntStateOf(0))
+    WearApp({}, mutableFloatStateOf(0.5f), mutableIntStateOf(0), false)
 }

@@ -50,6 +50,8 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core-android", version.ref = "composeVersion" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeVersion" }
 
+androidx-lifecycle-livedata = { group = "androidx.lifecycle", name = "lifecycle-livedata", version.ref = "lifecycleRuntimeKtx" }
+
 ## Wear OS
 
 androidx-wear = { group = "androidx.wear", name = "wear", version.ref = "wear" }

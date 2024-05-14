@@ -8,6 +8,7 @@ import com.jfalck.musictimer.countdown.CustomCountDownTimer
 import com.jfalck.musictimer.data.DataStoreManager
 import com.jfalck.musictimer.manager.MuteManager
 import com.jfalck.musictimer.notification.TimerNotificationManager
+import com.jfalck.musictimer.wear.WearableMessageSender
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ class MuteBinder(
     private val timerNotificationManager: TimerNotificationManager,
     private val muteManager: MuteManager,
     private val dataStoreManager: DataStoreManager,
-    private val coroutineDispatcher: CoroutineDispatcher
+    private val coroutineDispatcher: CoroutineDispatcher,
+    private val wearableMessageSender: WearableMessageSender
 ) : Binder(), MuteTimerManager {
 
     init {
@@ -56,8 +58,10 @@ class MuteBinder(
                 Log.d(TAG, "@${this@MuteBinder.hashCode()} Timer task executed")
                 muteManager.requestMediaFocus()
                 _isTimerRunning.value = false
+                wearableMessageSender.sendTimerState(false)
             }, isDevModeEnabled).apply {
                 start()
+                wearableMessageSender.sendTimerState(true)
             }
 
             _isTimerRunning.value = true
@@ -70,6 +74,7 @@ class MuteBinder(
             Log.d(TAG, "@${hashCode()} Cancelling countdown timer")
             it.cancel()
         }
+        wearableMessageSender.sendTimerState(false)
         timerNotificationManager.clearNotification()
         _isTimerRunning.value = false
     }
