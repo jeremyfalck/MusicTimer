@@ -12,44 +12,44 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(DATASTORE_NAME)
 
-class DataStoreManager(private val context: Context) {
+class DataStoreManager(private val context: Context): CacheManager {
 
     private val notificationIDKey = intPreferencesKey(NOTIFICATION_ID_KEY)
     private val lastTimeValueSelectedKey = intPreferencesKey(LAST_TIME_VALUE_SELECTED)
     private val devModeEnabledKey = booleanPreferencesKey(DEV_MODE_ENABLED_KEY)
 
-    suspend fun getNotificationId(): Int {
+    override suspend fun getNotificationId(): Int {
         val preferences = context.dataStore.data.first()
         return preferences[notificationIDKey] ?: 1
     }
 
-    suspend fun incrementNotificationId() {
+    override suspend fun incrementNotificationId() {
         context.dataStore.edit { preferences ->
             val currentId = preferences[notificationIDKey] ?: 1
             preferences[notificationIDKey] = currentId + 1
         }
     }
 
-    fun getLastTimeValueSelected(): Flow<Int> =
+    override fun getLastTimeValueSelected(): Flow<Int> =
         context.dataStore.data.map { preferences ->
             preferences[lastTimeValueSelectedKey] ?: 0
         }
 
-    suspend fun setLastTimeValueSelected(timeValue: Int) {
+    override suspend fun setLastTimeValueSelected(timeValue: Int) {
         context.dataStore.edit { preferences ->
             preferences[lastTimeValueSelectedKey] = timeValue
         }
     }
 
-    suspend fun getDevModeEnabled(): Boolean =
+    override suspend fun getDevModeEnabled(): Boolean =
         context.dataStore.data.first()[devModeEnabledKey] ?: false
 
-    fun getDevModeEnabledFlow(): Flow<Boolean> =
+    override fun getDevModeEnabledFlow(): Flow<Boolean> =
         context.dataStore.data.map { preferences ->
             preferences[devModeEnabledKey] ?: false
         }
 
-    suspend fun setDevModeEnabled(devModeEnabled: Boolean) {
+    override suspend fun setDevModeEnabled(devModeEnabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[devModeEnabledKey] = devModeEnabled
         }
@@ -57,8 +57,8 @@ class DataStoreManager(private val context: Context) {
 
     companion object {
         const val DATASTORE_NAME = "MusicTimerDataStore"
-        const val NOTIFICATION_ID_KEY = "notification_id"
-        const val LAST_TIME_VALUE_SELECTED = "last_value_selected"
-        const val DEV_MODE_ENABLED_KEY = "dev_mode_enabled"
+        private const val NOTIFICATION_ID_KEY = "notification_id"
+        private const val LAST_TIME_VALUE_SELECTED = "last_value_selected"
+        private const val DEV_MODE_ENABLED_KEY = "dev_mode_enabled"
     }
 }

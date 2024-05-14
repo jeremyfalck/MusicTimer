@@ -25,7 +25,6 @@ class MusicTimerApplication : Application() {
         }
     }
 
-    private fun initAds() {
-        MobileAds.initialize(this) { }
-    }
+    private fun initAds() =
+        MobileAds.initialize(this)
 }

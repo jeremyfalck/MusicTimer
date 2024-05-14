@@ -108,6 +108,27 @@ class MainActivity : ComponentActivity() {
         requestPermissionLauncher.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU }
             ?.launch(Manifest.permission.POST_NOTIFICATIONS)
 
+    private fun initMuteService() {
+        Log.d("MainActivity", "Instantiating MuteService")
+        Intent(this, MuteService::class.java).apply {
+            bindService(this, connection, Context.BIND_AUTO_CREATE)
+            startService(this)
+        }
+    }
+
+    private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) {
+        if (timerRunning) {
+            timerViewModel.stopMuteTimer()
+        } else {
+            timerViewModel.startTimer(sliderPosition)
+            Toast.makeText(
+                this,
+                getString(R.string.timer_start_toast, sliderPosition.toInt()),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private fun initView() {
         installSplashScreen()
         val onSettingsClick = { startActivity(Intent(this, SettingsActivity::class.java)) }
@@ -116,6 +137,7 @@ class MainActivity : ComponentActivity() {
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
             val initialSliderPosition by
             timerViewModel.timeValueSelected.collectAsState(initial = 0f).asFloatState()
+
             MainActivityContent(
                 timerRunning = timerRunning,
                 topAppBarTitle = getString(R.string.app_name),
@@ -131,27 +153,6 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
-    private fun initMuteService() {
-        Log.d("MainActivity", "Instantiating MuteService")
-        Intent(this, MuteService::class.java).apply {
-            bindService(this, connection, Context.BIND_AUTO_CREATE)
-            startService(this)
-        }
-    }
-
-    private fun onTimerButtonClick(sliderPosition: Int, timerRunning: Boolean) {
-        if (timerRunning) {
-            timerViewModel.stopMuteTimer()
-        } else {
-            timerViewModel.startTimer(sliderPosition)
-            Toast.makeText(
-                this,
-                getString(R.string.timer_start_toast, sliderPosition),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,7 +163,7 @@ fun MainActivityContent(
     onSettingsClick: () -> Unit = {},
     initialSliderPosition: Float,
     onSliderValueChanged: (Float) -> Unit,
-    onTimerButtonClick: (Int, Boolean) -> Unit,
+    onTimerButtonClick: (Float, Boolean) -> Unit,
     buttonText: String
 ) {
     MusicTimerTheme(
@@ -207,7 +208,7 @@ fun MainActivitySubContent(
     sliderPosition: Float,
     onSliderValueChanged: (Float) -> Unit,
     timerRunning: Boolean,
-    onTimerButtonClick: (Int, Boolean) -> Unit,
+    onTimerButtonClick: (Float, Boolean) -> Unit,
     buttonText: String
 ) {
 
@@ -234,7 +235,7 @@ fun MainActivitySubContent(
 
 
         Button(
-            onClick = { onTimerButtonClick(sliderPosition.toInt(), timerRunning) },
+            onClick = { onTimerButtonClick(sliderPosition, timerRunning) },
             modifier = Modifier.padding(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary,

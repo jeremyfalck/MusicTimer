@@ -3,7 +3,8 @@ package com.jfalck.musictimer.presenter.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
-import com.jfalck.musictimer_common.data.DataStoreManager
+import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
+import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -15,8 +16,9 @@ private const val TAG = "TimerViewModel"
 
 class TimerViewModel(
     private val service: MuteBinder,
-    private val dataStoreManager: DataStoreManager,
     private val coroutineDispatcher: CoroutineDispatcher,
+    private val getLastTimeValueSelectedUseCase: GetLastTimeValueSelectedUseCase,
+    private val setLastTimeValueSelectedUseCase: SetLastTimeValueSelectedUseCase,
 ) : ViewModel() {
 
     val isTimerRunning: Flow<Boolean> = service.isTimerRunning
@@ -26,9 +28,9 @@ class TimerViewModel(
 
     init {
         CoroutineScope(coroutineDispatcher).launch {
-            dataStoreManager.getLastTimeValueSelected().collect {
+            getLastTimeValueSelectedUseCase().collect {
                 Log.d(TAG, "Last time value selected: $it")
-                _timeValueSelected.emit(it.toFloat())
+                _timeValueSelected.emit(it)
             }
         }
     }
@@ -38,12 +40,12 @@ class TimerViewModel(
         _timeValueSelected.value = time
     }
 
-    fun startTimer(time: Int) {
+    fun startTimer(time: Float) {
         Log.d(TAG, "Starting timer for $time minutes")
         CoroutineScope(coroutineDispatcher).launch {
-            dataStoreManager.setLastTimeValueSelected(time)
+            setLastTimeValueSelectedUseCase(time)
         }
-        service.startMuteTimer(time)
+        service.startMuteTimer(time.toInt())
     }
 
     fun stopMuteTimer() =

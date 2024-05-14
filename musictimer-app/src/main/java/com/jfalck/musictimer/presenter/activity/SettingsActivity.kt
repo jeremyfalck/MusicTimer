@@ -29,9 +29,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jfalck.musictimer.R
-import com.jfalck.musictimer_common.data.DataStoreManager
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
+import com.jfalck.musictimer_common.data.CacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,7 +39,7 @@ import org.koin.android.ext.android.inject
 
 class SettingsActivity : ComponentActivity() {
 
-    private val dataStoreManager: DataStoreManager by inject()
+    private val dataStoreManager: CacheManager by inject()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

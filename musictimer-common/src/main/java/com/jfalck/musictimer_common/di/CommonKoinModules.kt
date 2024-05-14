@@ -1,5 +1,6 @@
 package com.jfalck.musictimer_common.di
 
+import com.jfalck.musictimer_common.data.CacheManager
 import com.jfalck.musictimer_common.data.DataStoreManager
 import com.jfalck.musictimer_common.wear.MusicTimerWearableMessageSender
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,7 +17,7 @@ object CommonKoinModules {
     const val MAIN_DISPATCHER_NAME = "MainDispatcher"
 
     val commonModule = module {
-        single<DataStoreManager> { DataStoreManager(androidContext()) }
+        single<CacheManager> { DataStoreManager(androidContext()) }
         single { MusicTimerWearableMessageSender(androidContext()) }
 
         single<CoroutineDispatcher>(named(IO_DISPATCHER_NAME)) { Dispatchers.IO }

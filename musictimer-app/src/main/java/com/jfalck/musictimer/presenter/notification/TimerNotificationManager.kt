@@ -19,7 +19,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.EXTRA_NOTIFICATION_ID
 import androidx.core.app.NotificationManagerCompat
 import com.jfalck.musictimer.R
-import com.jfalck.musictimer_common.data.DataStoreManager
+import com.jfalck.musictimer_common.data.CacheManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -28,7 +28,7 @@ private const val TAG = "TimerNotificationManager"
 
 class TimerNotificationManager(
     private val context: Context,
-    private val dataStoreManager: DataStoreManager,
+    private val dataStoreManager: CacheManager,
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
