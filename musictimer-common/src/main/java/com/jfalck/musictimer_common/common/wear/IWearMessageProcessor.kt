@@ -1,4 +1,4 @@
-package com.jfalck.musictimer_common.service
+package com.jfalck.musictimer_common.common.wear
 
 import com.google.android.gms.wearable.MessageEvent
 

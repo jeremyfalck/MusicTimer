@@ -6,7 +6,7 @@ import android.widget.Toast
 import com.google.android.gms.wearable.MessageEvent
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
-import com.jfalck.musictimer_common.service.IWearMessageProcessor
+import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 
 
 private const val TAG = "PhoneWearMessageProcessor"

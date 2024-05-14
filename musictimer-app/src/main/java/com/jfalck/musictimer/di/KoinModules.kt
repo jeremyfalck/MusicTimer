@@ -6,7 +6,7 @@ import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.common.wear.PhoneWearMessageProcessor
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer_common.di.CommonKoinModules.IO_DISPATCHER_NAME
-import com.jfalck.musictimer_common.service.IWearMessageProcessor
+import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

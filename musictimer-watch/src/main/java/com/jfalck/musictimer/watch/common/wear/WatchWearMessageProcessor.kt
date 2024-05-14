@@ -3,7 +3,7 @@ package com.jfalck.musictimer.watch.common.wear
 import android.util.Log
 import com.google.android.gms.wearable.MessageEvent
 import com.jfalck.musictimer.watch.data.repository.TimerRunningRepository
-import com.jfalck.musictimer_common.service.IWearMessageProcessor
+import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

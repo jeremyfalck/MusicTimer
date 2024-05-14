@@ -20,7 +20,7 @@
         <service android:name=".presenter.service.mute.MuteService" />
 
         <service
-            android:name="com.jfalck.musictimer_common.service.MusicTimerWearMessagingService"
+            android:name="com.jfalck.musictimer_common.service.wear.MusicTimerWearMessagingService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
