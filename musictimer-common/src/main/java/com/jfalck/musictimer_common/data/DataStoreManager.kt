@@ -30,10 +30,10 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
-    suspend fun getLastTimeValueSelected(): Int {
-        val preferences = context.dataStore.data.first()
-        return preferences[lastTimeValueSelectedKey] ?: 0
-    }
+    fun getLastTimeValueSelected(): Flow<Int> =
+        context.dataStore.data.map { preferences ->
+            preferences[lastTimeValueSelectedKey] ?: 0
+        }
 
     suspend fun setLastTimeValueSelected(timeValue: Int) {
         context.dataStore.edit { preferences ->
