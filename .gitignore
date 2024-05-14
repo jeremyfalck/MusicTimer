@@ -21,3 +21,7 @@ musicTimer.jks
 app/release/app-release.aab
 
 .idea/
+
+musictimer-app/release/
+
+musictimer-watch/release/

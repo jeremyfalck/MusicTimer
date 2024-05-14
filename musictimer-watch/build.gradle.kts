@@ -11,8 +11,8 @@ android {
         applicationId = "com.jfalck.musictimer"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "0.5"
         vectorDrawables {
             useSupportLibrary = true
         }
