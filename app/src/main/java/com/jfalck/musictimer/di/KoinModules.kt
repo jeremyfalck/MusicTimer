@@ -23,7 +23,7 @@ object KoinModules {
         single<TimerNotificationManager> {
             TimerNotificationManager(androidContext(), get(), get(named(IO_DISPATCHER_NAME)))
         }
-        single<MuteBinder> { MuteBinder(get(), get()) }
+        single<MuteBinder> { MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME))) }
 
         single<CoroutineDispatcher>(named(IO_DISPATCHER_NAME)) { Dispatchers.IO }
         single<CoroutineDispatcher>(named(DEFAULT_DISPATCHER_NAME)) { Dispatchers.Default }

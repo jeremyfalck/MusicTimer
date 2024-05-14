@@ -1,7 +1,6 @@
 package com.jfalck.musictimer.countdown
 
 import android.util.Log
-import com.jfalck.musictimer.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,21 +19,20 @@ private const val TAG = "CustomCountDownTimer"
 class CustomCountDownTimer(
     private val totalMinutes: Int,
     private val onTick: (Int) -> Unit = { minutesUntilFinished -> },
-    private val onFinish: () -> Unit = { }
+    private val onFinish: () -> Unit = { },
+    private val useDebugSeconds: Boolean = true
 ) {
 
     private var job: Job? = null
 
-    private val useSeconds = false
-
-    private val unit = if (useSeconds) "seconds" else "minutes"
+    private val unit = if (useDebugSeconds) "seconds" else "minutes"
 
     private val flow =
         (totalMinutes - 1 downTo 0).asFlow() // Emit total - 1 because the first was emitted onStart
             .onEach {
                 Log.d(TAG, "Emitting $unit: $it")
                 delay(
-                    if (useSeconds) 1000 else 60000)
+                    if (useDebugSeconds) 1000 else 60000)
             } // Each minute later emit a number
             .onStart {
                 Log.d(TAG, "Total $unit: $totalMinutes")

@@ -10,11 +10,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.annotation.ColorInt
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.EXTRA_NOTIFICATION_ID
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.TimerBroadcastReceiver
 import com.jfalck.musictimer.data.DataStoreManager
@@ -30,6 +33,9 @@ class TimerNotificationManager(
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
+    @ColorInt
+    private var notificationColor: Int? = null
+
     private val stopIntent = Intent(context, TimerBroadcastReceiver::class.java).apply {
         action = ACTION_STOP
         CoroutineScope(ioDispatcher).launch {
@@ -39,22 +45,29 @@ class TimerNotificationManager(
     private val stopPendingIntent: PendingIntent =
         PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
-    private val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_timer)
-        .setContentTitle(context.getString(R.string.app_name))
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        .setAutoCancel(false)
-        .setOngoing(true)
-        .setProgress(100, 0, false)
-        .setColorized(true)
-        .setColor(ContextCompat.getColor(context, R.color.primary))
-        .addAction(
+    @Composable
+    fun SetPrimaryColor() {
+        Log.d(TAG, "Setting primary color")
+        notificationColor = MaterialTheme.colorScheme.primary.toArgb()
+    }
+
+    private val builder = NotificationCompat.Builder(context, CHANNEL_ID).apply {
+        setSmallIcon(R.drawable.ic_timer)
+        setContentTitle(context.getString(R.string.app_name))
+        setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        setAutoCancel(false)
+        setOngoing(true)
+        setProgress(100, 0, false)
+        setColorized(true)
+        notificationColor?.let(::setColor)
+        addAction(
             NotificationCompat.Action(
                 null,
                 context.getString(R.string.stop),
                 stopPendingIntent
             )
         )
+    }
 
     private fun getRemainingTimeText(time: Int): String =
         context.getString(R.string.notification_message_remaining_time, time)
