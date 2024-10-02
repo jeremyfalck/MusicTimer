@@ -9,6 +9,8 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -61,7 +63,6 @@ class MainActivity : ComponentActivity() {
     private val notificationManager: TimerNotificationManager by inject()
 
     private var isServiceBound: Boolean = false
-
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -132,6 +133,7 @@ class MainActivity : ComponentActivity() {
     private fun initView() {
         installSplashScreen()
         val onSettingsClick = { startActivity(Intent(this, SettingsActivity::class.java)) }
+        val vibrator = getSystemService(Vibrator::class.java)
         setContent {
             notificationManager.SetPrimaryColor()
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
@@ -147,6 +149,9 @@ class MainActivity : ComponentActivity() {
                     timerViewModel.setTimeValueSelected(
                         sliderValue
                     )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                    }
                 },
                 onTimerButtonClick = ::onTimerButtonClick,
                 buttonText = getString(if (timerRunning) R.string.stop_timer else R.string.start_timer)
