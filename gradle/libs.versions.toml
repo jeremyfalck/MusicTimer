@@ -61,6 +61,12 @@ androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose
 androidx-compose-ui-tooling = { group = "androidx.wear.compose", name = "compose-ui-tooling", version.ref = "wearCompose" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
+## Widgets
+glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version = "1.0.0" }
+glance-material = { group = "androidx.glance", name = "glance-material", version = "1.0.0" }
+glance-material3 = { group = "androidx.glance", name = "glance-material3", version = "1.0.0" }
+
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

@@ -75,4 +75,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.play.services.ads)
+
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material)
+    implementation(libs.glance.material3)
 }

@@ -73,6 +73,16 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".presenter.ui.widget.MusicTimerGlanceReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_timer_widget_info" />
+        </receiver>
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-2297732968203269~6338321175" />
