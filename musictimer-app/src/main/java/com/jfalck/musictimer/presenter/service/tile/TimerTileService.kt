@@ -1,11 +1,15 @@
 package com.jfalck.musictimer.presenter.service.tile
 
+import android.content.ComponentName
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
 import android.widget.Toast
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
+import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +23,18 @@ private const val TAG = "TimerTileService"
 class TimerTileService : TileService() {
 
     private val muteBinder: MuteBinder by inject()
+    private val muteServiceManager: MuteServiceManager by inject()
     private var timerListeningJob: Job? = null
+
+    private val connection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
+            Log.d(TAG, "Service $name connected")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            Log.d(TAG, "Service $name disconnected")
+        }
+    }
 
     // Called when your app can update your tile.
     override fun onStartListening() {
@@ -47,10 +62,14 @@ class TimerTileService : TileService() {
 
 
         if (isActive) {
+            Log.d(TAG, "Starting timer service")
+            muteServiceManager.startMuteService(this, connection)
             muteBinder.startMuteTimer(20)
             Toast.makeText(this, getString(R.string.timer_start_toast, 20), Toast.LENGTH_SHORT)
                 .show()
         } else {
+            Log.d(TAG, "Stopping timer service")
+            muteServiceManager.stopMuteService(this)
             muteBinder.stopMuteTimer()
         }
     }

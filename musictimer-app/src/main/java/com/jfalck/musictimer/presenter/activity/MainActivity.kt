@@ -2,8 +2,8 @@ package com.jfalck.musictimer.presenter.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.StatusBarManager
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
@@ -46,7 +46,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
-import com.jfalck.musictimer.presenter.service.mute.MuteService
+import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
@@ -82,13 +82,7 @@ class MainActivity : ComponentActivity() {
         // do nothing
     }
 
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    override fun onStart() {
-        super.onStart()
-        initMuteService()
-    }
-
+    private val muteServiceManager: MuteServiceManager by inject()
 
     override fun onStop() {
         super.onStop()
@@ -109,25 +103,27 @@ class MainActivity : ComponentActivity() {
         requestPermissionLauncher.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU }
             ?.launch(Manifest.permission.POST_NOTIFICATIONS)
 
-    private fun initMuteService() {
-        Log.d("MainActivity", "Instantiating MuteService")
-        Intent(this, MuteService::class.java).apply {
-            bindService(this, connection, Context.BIND_AUTO_CREATE)
-            startService(this)
+    private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) =
+        if (timerRunning) {
+            stopMuteService()
+        } else {
+            startMuteService(sliderPosition.toInt())
         }
+
+    private fun startMuteService(timeInMinutes: Int) {
+        Log.d("MainActivity", "Instantiating MuteService")
+        muteServiceManager.startMuteService(this, connection)
+        timerViewModel.startTimer(timeInMinutes.toFloat())
+        Toast.makeText(
+            this,
+            getString(R.string.timer_start_toast, timeInMinutes),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
-    private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) {
-        if (timerRunning) {
-            timerViewModel.stopMuteTimer()
-        } else {
-            timerViewModel.startTimer(sliderPosition)
-            Toast.makeText(
-                this,
-                getString(R.string.timer_start_toast, sliderPosition.toInt()),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+    private fun stopMuteService() {
+        timerViewModel.stopMuteTimer()
+        muteServiceManager.stopMuteService(this)
     }
 
     private fun initView() {
