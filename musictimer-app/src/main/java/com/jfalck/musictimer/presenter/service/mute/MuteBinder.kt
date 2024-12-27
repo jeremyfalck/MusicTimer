@@ -5,6 +5,7 @@ import android.os.Binder
 import android.util.Log
 import com.jfalck.musictimer.common.countdown.CustomCountDownTimer
 import com.jfalck.musictimer.common.media.MediaFocusManager
+import com.jfalck.musictimer.presenter.notification.NotificationResource
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer_common.data.CacheManager
@@ -34,7 +35,15 @@ class MuteBinder(
     private var _isTimerRunning: MutableStateFlow<Boolean> = MutableStateFlow(false)
     var isTimerRunning: StateFlow<Boolean> = _isTimerRunning
 
-    override fun startMuteTimer(timeInMinutes: Int) {
+    var onStop: () -> Unit = {}
+
+    suspend fun buildNotification(timeSelectedInMinutes: Int): NotificationResource? =
+        timerNotificationManager.createOrUpdateNotification(
+            timeSelectedInMinutes,
+            timeSelectedInMinutes
+        )
+
+    override fun startMuteTimer(totalTimeInMinutes: Int) {
         Log.d(TAG, "@${hashCode()} Timer task started")
 
         CoroutineScope(coroutineDispatcher).launch {
@@ -44,16 +53,17 @@ class MuteBinder(
                 Log.d(TAG, "@${this@MuteBinder.hashCode()} Cancelling previous countdown timer")
                 it.cancel()
             }
-            timerNotificationManager.clearNotification()
 
-            countDownTimer = CustomCountDownTimer(timeInMinutes, { minutesUntilFinished ->
+            countDownTimer = CustomCountDownTimer(totalTimeInMinutes, { timeRemainingInMinutes ->
                 Log.d(TAG, "@${this@MuteBinder.hashCode()} Timer task ticked")
-                timerNotificationManager.createOrUpdateNotification(
-                    minutesUntilFinished,
-                    timeInMinutes
-                )
+                CoroutineScope(coroutineDispatcher).launch {
+                    timerNotificationManager.sendNotification(
+                        timeRemainingInMinutes,
+                        totalTimeInMinutes
+                    )
+                }
             }, {
-                timerNotificationManager.clearNotification()
+                onStop()
                 Log.d(TAG, "@${this@MuteBinder.hashCode()} Timer task executed")
                 mediaFocusManager.requestMediaFocus()
                 _isTimerRunning.value = false
@@ -69,12 +79,12 @@ class MuteBinder(
 
     override fun stopMuteTimer() {
         Log.d(TAG, "@${hashCode()} Timer task stopped")
+        onStop()
         countDownTimer?.let {
             Log.d(TAG, "@${hashCode()} Cancelling countdown timer")
             it.cancel()
         }
         wearableMessageManager.sendTimerState(false)
-        timerNotificationManager.clearNotification()
         _isTimerRunning.value = false
     }
 }

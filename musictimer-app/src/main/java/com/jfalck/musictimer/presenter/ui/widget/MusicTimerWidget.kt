@@ -16,12 +16,14 @@ import androidx.glance.layout.Column
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteService
+import com.jfalck.musictimer_common.data.DataStoreManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
 
     private val muteBinder: MuteBinder by inject()
+    private var dataStoreManager: DataStoreManager? = null
 
     companion object {
         private val SMALL_SQUARE = DpSize(100.dp, 100.dp)
@@ -31,6 +33,7 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
         SizeMode.Responsive(setOf(SMALL_SQUARE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        dataStoreManager = DataStoreManager(context)
         provideContent {
             GlanceContent(context)
         }
@@ -39,6 +42,8 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
     @Composable
     private fun GlanceContent(context: Context) {
         val isTimerRunning = muteBinder.isTimerRunning.collectAsState()
+        val quickSettingsTimeValue =
+            dataStoreManager?.getQuickSettingsTimeValueFlow()?.collectAsState(0)
         Column(
             verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -50,7 +55,9 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
                         muteBinder.stopMuteTimer()
                     } else {
                         actionStartService(MuteService::class.java)
-                        muteBinder.startMuteTimer(20)
+                        quickSettingsTimeValue?.value?.let { timeValue ->
+                            muteBinder.startMuteTimer(timeValue)
+                        }
                     }
                 }
             )

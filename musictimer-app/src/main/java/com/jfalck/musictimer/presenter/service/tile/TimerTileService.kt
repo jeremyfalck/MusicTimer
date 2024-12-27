@@ -10,6 +10,7 @@ import android.widget.Toast
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
+import com.jfalck.musictimer_common.data.DataStoreManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,9 +25,10 @@ class TimerTileService : TileService() {
 
     private val muteBinder: MuteBinder by inject()
     private val muteServiceManager: MuteServiceManager by inject()
+    private var dataStoreManager: DataStoreManager? = null
     private var timerListeningJob: Job? = null
 
-    private val connection: ServiceConnection = object : ServiceConnection {
+    private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             Log.d(TAG, "Service $name connected")
         }
@@ -40,6 +42,7 @@ class TimerTileService : TileService() {
     override fun onStartListening() {
         Log.d(TAG, "Starting listening")
         super.onStartListening()
+        dataStoreManager = DataStoreManager(this)
         timerListeningJob = CoroutineScope(Dispatchers.IO).launch {
             muteBinder.isTimerRunning.collectLatest { isActive ->
                 Log.d(TAG, "Timer running: $isActive")
@@ -60,13 +63,24 @@ class TimerTileService : TileService() {
         val isActive = qsTile.state != Tile.STATE_ACTIVE
         updateTile(isActive)
 
-
         if (isActive) {
             Log.d(TAG, "Starting timer service")
-            muteServiceManager.startMuteService(this, connection)
-            muteBinder.startMuteTimer(20)
-            Toast.makeText(this, getString(R.string.timer_start_toast, 20), Toast.LENGTH_SHORT)
-                .show()
+            CoroutineScope(Dispatchers.IO).launch {
+                dataStoreManager?.getQuickSettingsTimeValue()?.let { timeValue ->
+                    muteBinder.startMuteTimer(timeValue)
+                    connection?.let {
+                        muteServiceManager.startMuteService(this@TimerTileService, it, timeValue)
+                    }
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast.makeText(
+                            this@TimerTileService,
+                            getString(R.string.timer_start_toast, timeValue),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+
         } else {
             Log.d(TAG, "Stopping timer service")
             muteServiceManager.stopMuteService(this)
@@ -85,6 +99,7 @@ class TimerTileService : TileService() {
         CoroutineScope(Dispatchers.IO).launch {
             timerListeningJob?.cancelAndJoin()
         }
+        connection = null;
         super.onDestroy()
     }
 }

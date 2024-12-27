@@ -9,4 +9,7 @@
     <string name="stop">Stop</string>
     <string name="timer_tile_label">Start music timer</string>
     <string name="settings">Preferences</string>
+    <string name="dev_mode">Dev mode enabled</string>
+    <string name="quick_time_settings">Timer used by shortcuts</string>
+    <string name="quick_time_settings_desc">Used by widget and quick access</string>
 </resources>

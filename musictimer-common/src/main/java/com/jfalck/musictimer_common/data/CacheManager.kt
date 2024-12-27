@@ -11,4 +11,8 @@ interface CacheManager {
     suspend fun getDevModeEnabled(): Boolean
     fun getDevModeEnabledFlow(): Flow<Boolean>
     suspend fun setDevModeEnabled(devModeEnabled: Boolean)
+
+    fun getQuickSettingsTimeValueFlow(): Flow<Int>
+    suspend fun setQuickSettingsTimeValue(timeValue: Int)
+    suspend fun getQuickSettingsTimeValue(): Int
 }

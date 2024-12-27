@@ -32,7 +32,8 @@ class CustomCountDownTimer(
             .onEach {
                 Log.d(TAG, "Emitting $unit: $it")
                 delay(
-                    if (useDebugSeconds) 1000 else 60000)
+                    if (useDebugSeconds) 1000 else 60000
+                )
             } // Each minute later emit a number
             .onStart {
                 Log.d(TAG, "Total $unit: $totalMinutes")
@@ -50,10 +51,13 @@ class CustomCountDownTimer(
         job = CoroutineScope(Dispatchers.IO).launch {
             flow.collect { minutes ->
                 Log.d(TAG, "Remaining $unit: $minutes")
-                if (minutes == 0) {
-                    onFinish()
-                } else {
-                    onTick(minutes)
+                when (minutes) {
+                    0 -> onFinish()
+                    totalMinutes -> {
+                        // do nothing
+                    }
+
+                    else -> onTick(minutes)
                 }
             }
         }

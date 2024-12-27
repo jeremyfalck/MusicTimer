@@ -2,7 +2,6 @@ package com.jfalck.musictimer.presenter.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -112,7 +111,7 @@ class MainActivity : ComponentActivity() {
 
     private fun startMuteService(timeInMinutes: Int) {
         Log.d("MainActivity", "Instantiating MuteService")
-        muteServiceManager.startMuteService(this, connection)
+        muteServiceManager.startMuteService(this, connection, timeInMinutes)
         timerViewModel.startTimer(timeInMinutes.toFloat())
         Toast.makeText(
             this,
