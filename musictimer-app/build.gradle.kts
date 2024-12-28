@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.crashlytics)
 }
 
 android {
@@ -79,4 +81,7 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material)
     implementation(libs.glance.material3)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.bundles.firebase)
 }
