@@ -3,12 +3,13 @@ package com.jfalck.musictimer.presenter.activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -44,7 +45,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
-import com.jfalck.musictimer.presenter.service.mute.MuteService
+import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
@@ -61,7 +62,6 @@ class MainActivity : ComponentActivity() {
     private val notificationManager: TimerNotificationManager by inject()
 
     private var isServiceBound: Boolean = false
-
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -81,13 +81,7 @@ class MainActivity : ComponentActivity() {
         // do nothing
     }
 
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    override fun onStart() {
-        super.onStart()
-        initMuteService()
-    }
-
+    private val muteServiceManager: MuteServiceManager by inject()
 
     override fun onStop() {
         super.onStop()
@@ -108,30 +102,28 @@ class MainActivity : ComponentActivity() {
         requestPermissionLauncher.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU }
             ?.launch(Manifest.permission.POST_NOTIFICATIONS)
 
-    private fun initMuteService() {
-        Log.d("MainActivity", "Instantiating MuteService")
-        Intent(this, MuteService::class.java).apply {
-            bindService(this, connection, Context.BIND_AUTO_CREATE)
-            startService(this)
-        }
-    }
-
-    private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) {
+    private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) =
         if (timerRunning) {
-            timerViewModel.stopMuteTimer()
+            timerViewModel.stopMuteTimer(this)
         } else {
-            timerViewModel.startTimer(sliderPosition)
-            Toast.makeText(
-                this,
-                getString(R.string.timer_start_toast, sliderPosition.toInt()),
-                Toast.LENGTH_SHORT
-            ).show()
+            startMuteService(sliderPosition.toInt())
         }
+
+    private fun startMuteService(timeInMinutes: Int) {
+        Log.d("MainActivity", "Instantiating MuteService")
+        muteServiceManager.startMuteService(this, connection, timeInMinutes)
+        timerViewModel.onStartTimer(timeInMinutes.toFloat())
+        Toast.makeText(
+            this,
+            getString(R.string.timer_start_toast, timeInMinutes),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun initView() {
         installSplashScreen()
         val onSettingsClick = { startActivity(Intent(this, SettingsActivity::class.java)) }
+        val vibrator = getSystemService(Vibrator::class.java)
         setContent {
             notificationManager.SetPrimaryColor()
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
@@ -147,6 +139,9 @@ class MainActivity : ComponentActivity() {
                     timerViewModel.setTimeValueSelected(
                         sliderValue
                     )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                    }
                 },
                 onTimerButtonClick = ::onTimerButtonClick,
                 buttonText = getString(if (timerRunning) R.string.stop_timer else R.string.start_timer)

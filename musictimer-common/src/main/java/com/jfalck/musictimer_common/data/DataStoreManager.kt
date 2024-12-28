@@ -12,11 +12,12 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(DATASTORE_NAME)
 
-class DataStoreManager(private val context: Context): CacheManager {
+class DataStoreManager(private val context: Context) : CacheManager {
 
     private val notificationIDKey = intPreferencesKey(NOTIFICATION_ID_KEY)
     private val lastTimeValueSelectedKey = intPreferencesKey(LAST_TIME_VALUE_SELECTED)
     private val devModeEnabledKey = booleanPreferencesKey(DEV_MODE_ENABLED_KEY)
+    private val quickSettingsTimeValueKey = intPreferencesKey(QUICK_SETTINGS_TIME_VALUE_KEY)
 
     override suspend fun getNotificationId(): Int {
         val preferences = context.dataStore.data.first()
@@ -55,10 +56,25 @@ class DataStoreManager(private val context: Context): CacheManager {
         }
     }
 
+    override suspend fun getQuickSettingsTimeValue(): Int =
+        context.dataStore.data.first()[quickSettingsTimeValueKey] ?: 20
+
+    override fun getQuickSettingsTimeValueFlow(): Flow<Int> =
+        context.dataStore.data.map { preferences ->
+            preferences[quickSettingsTimeValueKey] ?: 20
+        }
+
+    override suspend fun setQuickSettingsTimeValue(timeValue: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[quickSettingsTimeValueKey] = timeValue
+        }
+    }
+
     companion object {
         const val DATASTORE_NAME = "MusicTimerDataStore"
         private const val NOTIFICATION_ID_KEY = "notification_id"
         private const val LAST_TIME_VALUE_SELECTED = "last_value_selected"
         private const val DEV_MODE_ENABLED_KEY = "dev_mode_enabled"
+        private const val QUICK_SETTINGS_TIME_VALUE_KEY = "quick_settings_time_value"
     }
 }

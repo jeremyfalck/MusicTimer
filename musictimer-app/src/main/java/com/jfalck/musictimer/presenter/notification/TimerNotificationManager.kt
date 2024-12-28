@@ -2,6 +2,7 @@ package com.jfalck.musictimer.presenter.notification
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -57,8 +58,6 @@ class TimerNotificationManager(
         setAutoCancel(false)
         setOngoing(true)
         setProgress(100, 0, false)
-        setColorized(true)
-        notificationColor?.let(::setColor)
         addAction(
             NotificationCompat.Action(
                 null,
@@ -68,32 +67,38 @@ class TimerNotificationManager(
         )
     }
 
+    private fun getNotification(timeRemaining: Int, totalTime: Int): Notification {
+        return builder
+            .setContentText(getRemainingTimeText(timeRemaining))
+            .setProgress(100, ((totalTime - timeRemaining) * 100) / totalTime, false)
+            .build()
+    }
+
     private fun getRemainingTimeText(time: Int): String =
         context.getString(R.string.notification_message_remaining_time, time)
 
     @SuppressLint("MissingPermission")
-    fun createOrUpdateNotification(timeRemaining: Int, totalTime: Int) {
+    suspend fun createOrUpdateNotification(
+        timeRemaining: Int,
+        totalTime: Int
+    ): NotificationResource? {
         Log.d(
             TAG,
             "displaying notification with $timeRemaining minutes remaining and $totalTime total minutes"
         )
-        builder
-            .setContentText(getRemainingTimeText(timeRemaining))
-            .setProgress(100, ((totalTime - timeRemaining) * 100) / totalTime, false)
-        CoroutineScope(ioDispatcher).launch {
-            with(NotificationManagerCompat.from(context)) {
-                if (!hasNotficationPermission()) {
-                    Log.d(TAG, "No permission to post notifications")
-                    return@with
-                }
-                if (timeRemaining == totalTime) {
-                    dataStoreManager.incrementNotificationId()
-                }
-                val notificationId = dataStoreManager.getNotificationId()
-                Log.d(TAG, "displaying notification with id $notificationId")
-                notify(notificationId, builder.build())
+        with(NotificationManagerCompat.from(context)) {
+            if (!hasNotficationPermission()) {
+                Log.d(TAG, "No permission to post notifications")
+                return@with
             }
+            if (timeRemaining == totalTime) {
+                dataStoreManager.incrementNotificationId()
+            }
+            val notificationId = dataStoreManager.getNotificationId()
+            Log.d(TAG, "displaying notification with id $notificationId")
+            return NotificationResource(getNotification(timeRemaining, totalTime), notificationId);
         }
+        return null
     }
 
     private fun hasNotficationPermission() =
@@ -120,10 +125,17 @@ class TimerNotificationManager(
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun clearNotification() {
-        Log.d(TAG, "clearing notification")
-        CoroutineScope(ioDispatcher).launch {
-            NotificationManagerCompat.from(context).cancel(dataStoreManager.getNotificationId())
+    @SuppressLint("MissingPermission")
+    suspend fun sendNotification(timeRemainingInMinutes: Int, totalTimeInMinutes: Int) {
+        val notificationId = dataStoreManager.getNotificationId()
+        val notification = getNotification(timeRemainingInMinutes, totalTimeInMinutes)
+
+        with(NotificationManagerCompat.from(context)) {
+            if (!hasNotficationPermission()) {
+                Log.d(TAG, "No permission to post notifications")
+                return@with
+            }
+            notify(notificationId, notification)
         }
     }
 

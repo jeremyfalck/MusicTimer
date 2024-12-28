@@ -6,6 +6,7 @@ import com.jfalck.musictimer.data.ITimeValueRepository
 import com.jfalck.musictimer.data.TimeValueRepository
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
+import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
@@ -32,6 +33,7 @@ object KoinModules {
         single<MuteBinder> {
             MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME)), get())
         }
+        single { MuteServiceManager(get()) }
 
         single<ITimeValueRepository> { TimeValueRepository(get()) }
 
@@ -39,7 +41,7 @@ object KoinModules {
         single<SetLastTimeValueSelectedUseCase> { SetLastTimeValueSelectedUseCase(get()) }
 
         viewModel {
-            TimerViewModel(get(), get(named(IO_DISPATCHER_NAME)), get(), get())
+            TimerViewModel(get(), get(named(IO_DISPATCHER_NAME)), get(), get(), get())
         }
     }
 }

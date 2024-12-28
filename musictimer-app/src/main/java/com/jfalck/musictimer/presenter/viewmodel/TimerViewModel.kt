@@ -1,8 +1,10 @@
 package com.jfalck.musictimer.presenter.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
+import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
 import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,9 +21,10 @@ class TimerViewModel(
     private val coroutineDispatcher: CoroutineDispatcher,
     private val getLastTimeValueSelectedUseCase: GetLastTimeValueSelectedUseCase,
     private val setLastTimeValueSelectedUseCase: SetLastTimeValueSelectedUseCase,
+    private val muteServiceManager: MuteServiceManager
 ) : ViewModel() {
 
-    val isTimerRunning: Flow<Boolean> = service.isTimerRunning
+    val isTimerRunning: Flow<Boolean> = muteServiceManager.isTimerRunning
 
     private val _timeValueSelected: MutableStateFlow<Float> = MutableStateFlow(0f)
     val timeValueSelected: StateFlow<Float> = _timeValueSelected
@@ -40,14 +43,13 @@ class TimerViewModel(
         _timeValueSelected.value = time
     }
 
-    fun startTimer(time: Float) {
+    fun onStartTimer(time: Float) {
         Log.d(TAG, "Starting timer for $time minutes")
         CoroutineScope(coroutineDispatcher).launch {
             setLastTimeValueSelectedUseCase(time)
         }
-        service.startMuteTimer(time.toInt())
     }
 
-    fun stopMuteTimer() =
-        service.stopMuteTimer()
+    fun stopMuteTimer(context: Context) =
+        muteServiceManager.stopMuteService(context)
 }
