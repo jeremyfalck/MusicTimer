@@ -22,7 +22,7 @@ private const val TAG = "MuteService"
 class MuteService : Service() {
 
     companion object {
-        const val TIME_IN_MINUTES = "TIME_IN_MINUTES"
+        const val EXTRA_TIME_IN_MINUTES = "TIME_IN_MINUTES"
     }
 
     private val muteBinder: MuteBinder by inject()
@@ -37,6 +37,7 @@ class MuteService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Log.d(TAG, "Received onStartCommand")
         val serviceType: Int =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
@@ -44,7 +45,7 @@ class MuteService : Service() {
                 0
             }
         CoroutineScope(Dispatchers.IO).launch {
-            val timeSelectedInMinutes = intent.getIntExtra(TIME_IN_MINUTES, 0)
+            val timeSelectedInMinutes = intent.getIntExtra(EXTRA_TIME_IN_MINUTES, 0)
             muteBinder.buildNotification(timeSelectedInMinutes)?.let {
                 ServiceCompat.startForeground(
                     this@MuteService, it.notificationId, it.notification, serviceType

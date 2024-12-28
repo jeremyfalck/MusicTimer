@@ -7,7 +7,7 @@ import android.content.ServiceConnection
 class MuteServiceManager {
     fun startMuteService(context: Context, connection: ServiceConnection, timeInMinutes: Int) {
         Intent(context, MuteService::class.java).apply {
-            putExtra(MuteService.TIME_IN_MINUTES, timeInMinutes)
+            putExtra(MuteService.EXTRA_TIME_IN_MINUTES, timeInMinutes)
             context.bindService(this, connection, Context.BIND_AUTO_CREATE)
             context.startService(this)
         }
