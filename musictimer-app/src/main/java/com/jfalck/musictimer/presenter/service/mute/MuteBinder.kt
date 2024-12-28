@@ -72,7 +72,6 @@ class MuteBinder(
                 start()
                 wearableMessageManager.sendTimerState(true)
             }
-
             _isTimerRunning.value = true
         }
     }

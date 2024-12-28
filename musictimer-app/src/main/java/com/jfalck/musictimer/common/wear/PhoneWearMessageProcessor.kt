@@ -8,7 +8,6 @@ import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.wearable.MessageEvent
 import com.jfalck.musictimer.R
-import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 
@@ -19,7 +18,6 @@ private const val TIMER_STOP_PATH = "/stop_timer"
 
 class PhoneWearMessageProcessor(
     private val context: Context,
-    private val muteBinder: MuteBinder,
     private val muteServiceManager: MuteServiceManager
 ) :
     IWearMessageProcessor {
@@ -41,7 +39,6 @@ class PhoneWearMessageProcessor(
                 Log.i(TAG, "Service: message ($MESSAGE_PATH) received: $time")
                 if (time != null) {
                     muteServiceManager.startMuteService(context, connection, time)
-                    muteBinder.startMuteTimer(time)
                     Toast.makeText(
                         context,
                         context.getString(R.string.timer_start_toast, time),
@@ -54,7 +51,7 @@ class PhoneWearMessageProcessor(
 
             TIMER_STOP_PATH -> {
                 Log.i(TAG, "Service: message ($TIMER_STOP_PATH) received")
-                muteBinder.stopMuteTimer()
+                muteServiceManager.stopMuteService(context)
 
             }
         }

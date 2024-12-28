@@ -27,13 +27,13 @@ object KoinModules {
             TimerNotificationManager(androidContext(), get(), get(named(IO_DISPATCHER_NAME)))
         }
         single<WearableMessageManager> { WearableMessageManager(get()) }
-        single { MuteServiceManager() }
 
-        single<IWearMessageProcessor> { PhoneWearMessageProcessor(androidContext(), get(), get()) }
+        single<IWearMessageProcessor> { PhoneWearMessageProcessor(androidContext(), get()) }
 
         single<MuteBinder> {
             MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME)), get())
         }
+        single { MuteServiceManager(get()) }
 
         single<ITimeValueRepository> { TimeValueRepository(get()) }
 
@@ -41,7 +41,7 @@ object KoinModules {
         single<SetLastTimeValueSelectedUseCase> { SetLastTimeValueSelectedUseCase(get()) }
 
         viewModel {
-            TimerViewModel(get(), get(named(IO_DISPATCHER_NAME)), get(), get())
+            TimerViewModel(get(), get(named(IO_DISPATCHER_NAME)), get(), get(), get())
         }
     }
 }

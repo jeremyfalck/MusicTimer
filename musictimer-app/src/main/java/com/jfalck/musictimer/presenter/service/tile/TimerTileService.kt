@@ -8,9 +8,8 @@ import android.service.quicksettings.TileService
 import android.util.Log
 import android.widget.Toast
 import com.jfalck.musictimer.R
-import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
-import com.jfalck.musictimer_common.data.DataStoreManager
+import com.jfalck.musictimer_common.data.CacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,9 +22,8 @@ private const val TAG = "TimerTileService"
 
 class TimerTileService : TileService() {
 
-    private val muteBinder: MuteBinder by inject()
     private val muteServiceManager: MuteServiceManager by inject()
-    private var dataStoreManager: DataStoreManager? = null
+    private val dataStoreManager: CacheManager by inject()
     private var timerListeningJob: Job? = null
 
     private var connection: ServiceConnection? = object : ServiceConnection {
@@ -42,9 +40,8 @@ class TimerTileService : TileService() {
     override fun onStartListening() {
         Log.d(TAG, "Starting listening")
         super.onStartListening()
-        dataStoreManager = DataStoreManager(this)
         timerListeningJob = CoroutineScope(Dispatchers.IO).launch {
-            muteBinder.isTimerRunning.collectLatest { isActive ->
+            muteServiceManager.isTimerRunning.collectLatest { isActive ->
                 Log.d(TAG, "Timer running: $isActive")
                 updateTile(isActive)
             }
@@ -67,7 +64,6 @@ class TimerTileService : TileService() {
             Log.d(TAG, "Starting timer service")
             CoroutineScope(Dispatchers.IO).launch {
                 dataStoreManager?.getQuickSettingsTimeValue()?.let { timeValue ->
-                    muteBinder.startMuteTimer(timeValue)
                     connection?.let {
                         muteServiceManager.startMuteService(this@TimerTileService, it, timeValue)
                     }
@@ -84,7 +80,6 @@ class TimerTileService : TileService() {
         } else {
             Log.d(TAG, "Stopping timer service")
             muteServiceManager.stopMuteService(this)
-            muteBinder.stopMuteTimer()
         }
     }
 

@@ -17,9 +17,8 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import com.jfalck.musictimer.R
-import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
-import com.jfalck.musictimer_common.data.DataStoreManager
+import com.jfalck.musictimer_common.data.CacheManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -27,9 +26,8 @@ private const val TAG = "MusicTimerWidget"
 
 class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
 
-    private val muteBinder: MuteBinder by inject()
     private val muteServiceManager: MuteServiceManager by inject()
-    private var dataStoreManager: DataStoreManager? = null
+    private val dataStoreManager: CacheManager by inject()
 
     companion object {
         private val SMALL_SQUARE = DpSize(100.dp, 100.dp)
@@ -39,7 +37,6 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
         SizeMode.Responsive(setOf(SMALL_SQUARE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        dataStoreManager = DataStoreManager(context)
         provideContent {
             GlanceContent(context)
         }
@@ -57,7 +54,7 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
 
     @Composable
     private fun GlanceContent(context: Context) {
-        val isTimerRunning = muteBinder.isTimerRunning.collectAsState()
+        val isTimerRunning = muteServiceManager.isTimerRunning.collectAsState()
         val quickSettingsTimeValue =
             dataStoreManager?.getQuickSettingsTimeValueFlow()?.collectAsState(0)
         Column(
@@ -68,13 +65,12 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
                 text = context.getString(if (isTimerRunning.value) R.string.stop_timer else R.string.start_timer),
                 onClick = {
                     if (isTimerRunning.value) {
-                        muteBinder.stopMuteTimer()
+                        muteServiceManager.stopMuteService(context)
                     } else {
                         quickSettingsTimeValue?.value?.let { timeValue ->
                             connection?.let {
                                 muteServiceManager.startMuteService(context, it, timeValue)
                             }
-                            muteBinder.startMuteTimer(timeValue)
                         }
                     }
                 }
@@ -84,7 +80,6 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
 
     override suspend fun onDelete(context: Context, glanceId: GlanceId) {
         connection = null
-        dataStoreManager = null
         super.onDelete(context, glanceId)
     }
 }

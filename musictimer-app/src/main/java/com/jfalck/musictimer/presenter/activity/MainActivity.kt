@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
     private fun onTimerButtonClick(sliderPosition: Float, timerRunning: Boolean) =
         if (timerRunning) {
-            stopMuteService()
+            timerViewModel.stopMuteTimer(this)
         } else {
             startMuteService(sliderPosition.toInt())
         }
@@ -112,17 +112,12 @@ class MainActivity : ComponentActivity() {
     private fun startMuteService(timeInMinutes: Int) {
         Log.d("MainActivity", "Instantiating MuteService")
         muteServiceManager.startMuteService(this, connection, timeInMinutes)
-        timerViewModel.startTimer(timeInMinutes.toFloat())
+        timerViewModel.onStartTimer(timeInMinutes.toFloat())
         Toast.makeText(
             this,
             getString(R.string.timer_start_toast, timeInMinutes),
             Toast.LENGTH_SHORT
         ).show()
-    }
-
-    private fun stopMuteService() {
-        timerViewModel.stopMuteTimer()
-        muteServiceManager.stopMuteService(this)
     }
 
     private fun initView() {
