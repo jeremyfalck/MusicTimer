@@ -18,7 +18,7 @@ private const val TAG = "CustomCountDownTimer"
 
 class CustomCountDownTimer(
     private val totalMinutes: Int,
-    private val onTick: (Int) -> Unit = { minutesUntilFinished -> },
+    private val onTick: (Int) -> Unit = { },
     private val onFinish: () -> Unit = { },
     private val useDebugSeconds: Boolean = true
 ) {

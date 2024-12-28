@@ -56,7 +56,7 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
     private fun GlanceContent(context: Context) {
         val isTimerRunning = muteServiceManager.isTimerRunning.collectAsState()
         val quickSettingsTimeValue =
-            dataStoreManager?.getQuickSettingsTimeValueFlow()?.collectAsState(0)
+            dataStoreManager.getQuickSettingsTimeValueFlow().collectAsState(0)
         Column(
             verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = Alignment.CenterHorizontally
