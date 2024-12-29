@@ -34,7 +34,7 @@ class DataStoreManager(private val context: Context) : CacheManager {
 
     override fun getLastTimeValueSelected(): Flow<Int> =
         context.dataStore.data.map { preferences ->
-            preferences[lastTimeValueSelectedKey] ?: 0
+            preferences[lastTimeValueSelectedKey] ?: 1
         }
 
     override suspend fun setLastTimeValueSelected(timeValue: Int) {

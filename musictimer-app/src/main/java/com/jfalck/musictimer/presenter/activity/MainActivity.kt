@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
             notificationManager.SetPrimaryColor()
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
             val initialSliderPosition by
-            timerViewModel.timeValueSelected.collectAsState(initial = 0f).asFloatState()
+            timerViewModel.timeValueSelected.collectAsState(initial = 1f).asFloatState()
 
             MainActivityContent(
                 timerRunning = timerRunning,
@@ -265,7 +265,7 @@ fun MainActivitySubContent(
             value = sliderPosition,
             valueRange = 1F..90F,
             onValueChange = onSliderValueChanged,
-            steps = 91,
+            steps = 90,
             enabled = true
         )
 

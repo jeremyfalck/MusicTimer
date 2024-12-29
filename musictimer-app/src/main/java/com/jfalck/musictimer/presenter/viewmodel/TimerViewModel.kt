@@ -27,7 +27,7 @@ class TimerViewModel(
 
     val isTimerRunning: Flow<Boolean> = muteServiceManager.isTimerRunning
 
-    private val _timeValueSelected: MutableStateFlow<Float> = MutableStateFlow(0f)
+    private val _timeValueSelected: MutableStateFlow<Float> = MutableStateFlow(1f)
     val timeValueSelected: StateFlow<Float> = _timeValueSelected
 
     private val _showTileAdditionSuggestion: MutableStateFlow<Boolean> = MutableStateFlow(false)
