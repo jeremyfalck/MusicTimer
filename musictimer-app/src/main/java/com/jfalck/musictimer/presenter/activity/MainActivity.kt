@@ -2,9 +2,11 @@ package com.jfalck.musictimer.presenter.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -42,14 +44,18 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
-import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
+import com.jfalck.musictimer.presenter.service.tile.TimerTileService
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -81,8 +87,6 @@ class MainActivity : ComponentActivity() {
         // do nothing
     }
 
-    private val muteServiceManager: MuteServiceManager by inject()
-
     override fun onStop() {
         super.onStop()
         if (isServiceBound) {
@@ -95,6 +99,50 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         initView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            initTileSuggestionListener()
+        }
+    }
+
+    private fun initTileSuggestionListener() {
+        Log.d(TAG, "Version is at least Tiramisu")
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Log.d(TAG, "repeatOnLifecycle")
+                timerViewModel.showTileAdditionSuggestion.collect { shouldDisplayTileAddSuggestion ->
+                    Log.d(
+                        TAG,
+                        "shouldDisplayTileAddSuggestion: $shouldDisplayTileAddSuggestion"
+                    )
+                    if (shouldDisplayTileAddSuggestion) {
+                        suggestTile()
+                    }
+                }
+            }
+        }
+    }
+
+
+    @SuppressLint("NewApi")
+    private fun suggestTile() {
+        Log.d(TAG, "suggestTile()")
+        val statusBarService =
+            this.getSystemService(StatusBarManager::class.java)
+
+        val componentName = ComponentName(
+            this@MainActivity.applicationContext,
+            TimerTileService::class.java.getName()
+        )
+        statusBarService.requestAddTileService(
+            componentName,
+            this@MainActivity.getString(R.string.timer_tile_label),
+            Icon.createWithResource(
+                this@MainActivity,
+                R.drawable.timer_tile_icon
+            ),
+            {},
+            {}
+        )
     }
 
     @SuppressLint("InlinedApi")
@@ -111,8 +159,7 @@ class MainActivity : ComponentActivity() {
 
     private fun startMuteService(timeInMinutes: Int) {
         Log.d("MainActivity", "Instantiating MuteService")
-        muteServiceManager.startMuteService(this, connection, timeInMinutes)
-        timerViewModel.onStartTimer(timeInMinutes.toFloat())
+        timerViewModel.onStartTimer(this, connection, timeInMinutes)
         Toast.makeText(
             this,
             getString(R.string.timer_start_toast, timeInMinutes),

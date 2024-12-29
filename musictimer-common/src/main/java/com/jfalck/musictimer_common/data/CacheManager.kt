@@ -6,8 +6,10 @@ interface CacheManager {
 
     suspend fun getNotificationId(): Int
     suspend fun incrementNotificationId()
+
     fun getLastTimeValueSelected(): Flow<Int>
     suspend fun setLastTimeValueSelected(timeValue: Int)
+
     suspend fun getDevModeEnabled(): Boolean
     fun getDevModeEnabledFlow(): Flow<Boolean>
     suspend fun setDevModeEnabled(devModeEnabled: Boolean)
@@ -15,4 +17,7 @@ interface CacheManager {
     fun getQuickSettingsTimeValueFlow(): Flow<Int>
     suspend fun setQuickSettingsTimeValue(timeValue: Int)
     suspend fun getQuickSettingsTimeValue(): Int
+
+    suspend fun getTimerLaunchCount(): Int
+    suspend fun setTimerLaunchCount(count: Int)
 }

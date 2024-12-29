@@ -10,6 +10,8 @@ import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
+import com.jfalck.musictimer.usecase.GetTileAdditionSuggestionUseCase
+import com.jfalck.musictimer.usecase.IncrementLaunchCountUseCase
 import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
 import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 import com.jfalck.musictimer_common.di.CommonKoinModules.IO_DISPATCHER_NAME
@@ -39,9 +41,11 @@ object KoinModules {
 
         single<GetLastTimeValueSelectedUseCase> { GetLastTimeValueSelectedUseCase(get()) }
         single<SetLastTimeValueSelectedUseCase> { SetLastTimeValueSelectedUseCase(get()) }
+        single<GetTileAdditionSuggestionUseCase> { GetTileAdditionSuggestionUseCase(get()) }
+        single<IncrementLaunchCountUseCase> { IncrementLaunchCountUseCase(get()) }
 
         viewModel {
-            TimerViewModel(get(), get(named(IO_DISPATCHER_NAME)), get(), get(), get())
+            TimerViewModel(get(), get(), get(), get(), get())
         }
     }
 }

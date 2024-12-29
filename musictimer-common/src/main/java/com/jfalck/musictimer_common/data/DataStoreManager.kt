@@ -18,6 +18,7 @@ class DataStoreManager(private val context: Context) : CacheManager {
     private val lastTimeValueSelectedKey = intPreferencesKey(LAST_TIME_VALUE_SELECTED)
     private val devModeEnabledKey = booleanPreferencesKey(DEV_MODE_ENABLED_KEY)
     private val quickSettingsTimeValueKey = intPreferencesKey(QUICK_SETTINGS_TIME_VALUE_KEY)
+    private val timerLaunchCountValueKey = intPreferencesKey(TIMER_LAUNCH_COUNT_VALUE_KEY)
 
     override suspend fun getNotificationId(): Int {
         val preferences = context.dataStore.data.first()
@@ -70,11 +71,21 @@ class DataStoreManager(private val context: Context) : CacheManager {
         }
     }
 
+    override suspend fun getTimerLaunchCount(): Int =
+        context.dataStore.data.first()[timerLaunchCountValueKey] ?: 0
+
+    override suspend fun setTimerLaunchCount(count: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[timerLaunchCountValueKey] = count
+        }
+    }
+
     companion object {
         const val DATASTORE_NAME = "MusicTimerDataStore"
         private const val NOTIFICATION_ID_KEY = "notification_id"
         private const val LAST_TIME_VALUE_SELECTED = "last_value_selected"
         private const val DEV_MODE_ENABLED_KEY = "dev_mode_enabled"
         private const val QUICK_SETTINGS_TIME_VALUE_KEY = "quick_settings_time_value"
+        private const val TIMER_LAUNCH_COUNT_VALUE_KEY = "timer_launch_count_value"
     }
 }
