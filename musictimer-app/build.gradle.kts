@@ -30,6 +30,7 @@ android {
                 "ADMOB_MAIN_BANNER_ID",
                 "\"ca-app-pub-3940256099942544/9214589741\""
             )
+            applicationIdSuffix = ".debug"
         }
         release {
             buildConfigField(

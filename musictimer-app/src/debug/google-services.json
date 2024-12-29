@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "107693456066",
+    "project_id": "musictimer-32708",
+    "storage_bucket": "musictimer-32708.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:107693456066:android:089158fc6fe0126300995b",
+        "android_client_info": {
+          "package_name": "com.jfalck.musictimer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQysenWtPfEuX9QJp-QP0xhJmE8XhOaxQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:107693456066:android:8be45ce46073d75100995b",
+        "android_client_info": {
+          "package_name": "com.jfalck.musictimer.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQysenWtPfEuX9QJp-QP0xhJmE8XhOaxQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

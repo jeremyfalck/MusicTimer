@@ -44,10 +44,8 @@ import com.jfalck.musictimer.watch.R
 import com.jfalck.musictimer.watch.presentation.theme.MusicTimerTheme
 import com.jfalck.musictimer.watch.presentation.viewmodel.TimerRunningViewModel
 import com.jfalck.musictimer.watch.presentation.wear.WearableMessageManager
-import com.jfalck.musictimer_common.wear.MusicTimerWearableMessageSender
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.nio.charset.Charset
 
 private const val TAG = "MainWearActivity"
 
@@ -57,7 +55,7 @@ class MainWearActivity : ComponentActivity() {
 
     private val wearableMessageManager: WearableMessageManager by inject()
 
-    private var initialSliderPosition: MutableFloatState = mutableFloatStateOf(0f)
+    private var initialSliderPosition: MutableFloatState = mutableFloatStateOf(1f)
 
     private var timeSelection: MutableIntState = mutableIntStateOf(0)
 
@@ -99,8 +97,8 @@ class MainWearActivity : ComponentActivity() {
 
             if (initialSliderPosition.floatValue > 1f) {
                 initialSliderPosition.floatValue = 1f
-            } else if (initialSliderPosition.floatValue < 0f) {
-                initialSliderPosition.floatValue = 0f
+            } else if (initialSliderPosition.floatValue < 1f) {
+                initialSliderPosition.floatValue = 1f
             }
 
             processTimeValue()
