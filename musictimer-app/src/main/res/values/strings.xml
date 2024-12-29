@@ -12,4 +12,9 @@
     <string name="dev_mode">Dev mode enabled</string>
     <string name="quick_time_settings">Timer used by shortcuts</string>
     <string name="quick_time_settings_desc">Used by widget and quick access</string>
+
+    <plurals name="timer_value_selected">
+        <item quantity="one">1 minute</item>
+        <item quantity="many">%d minutes</item>
+    </plurals>
 </resources>

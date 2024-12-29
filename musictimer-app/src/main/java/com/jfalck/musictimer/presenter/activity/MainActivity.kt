@@ -174,14 +174,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             notificationManager.SetPrimaryColor()
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
-            val initialSliderPosition by
+            val sliderPosition by
             timerViewModel.timeValueSelected.collectAsState(initial = 1f).asFloatState()
+
+            val intValue = sliderPosition.toInt()
+
+            val sliderText = resources.getQuantityString(
+                R.plurals.timer_value_selected,
+                intValue,
+                intValue
+            )
 
             MainActivityContent(
                 timerRunning = timerRunning,
                 topAppBarTitle = getString(R.string.app_name),
                 onSettingsClick = onSettingsClick,
-                initialSliderPosition = initialSliderPosition,
+                sliderPosition = sliderPosition,
+                sliderText = sliderText,
                 onSliderValueChanged = { sliderValue ->
                     timerViewModel.setTimeValueSelected(
                         sliderValue
@@ -203,7 +212,8 @@ fun MainActivityContent(
     timerRunning: Boolean,
     topAppBarTitle: String,
     onSettingsClick: () -> Unit = {},
-    initialSliderPosition: Float,
+    sliderPosition: Float,
+    sliderText: String,
     onSliderValueChanged: (Float) -> Unit,
     onTimerButtonClick: (Float, Boolean) -> Unit,
     buttonText: String
@@ -232,7 +242,8 @@ fun MainActivityContent(
             ) { innerPadding ->
                 MainActivitySubContent(
                     innerPadding = innerPadding,
-                    sliderPosition = initialSliderPosition,
+                    sliderPosition = sliderPosition,
+                    sliderText = sliderText,
                     onSliderValueChanged = onSliderValueChanged,
                     timerRunning = timerRunning,
                     onTimerButtonClick = onTimerButtonClick,
@@ -248,6 +259,7 @@ fun MainActivityContent(
 fun MainActivitySubContent(
     innerPadding: PaddingValues,
     sliderPosition: Float,
+    sliderText: String,
     onSliderValueChanged: (Float) -> Unit,
     timerRunning: Boolean,
     onTimerButtonClick: (Float, Boolean) -> Unit,
@@ -270,7 +282,7 @@ fun MainActivitySubContent(
         )
 
         Text(
-            text = "${sliderPosition.toInt()} minutes",
+            text = sliderText,
             modifier = Modifier.padding(16.dp),
             color = MaterialTheme.colorScheme.secondary
         )
@@ -297,7 +309,8 @@ fun ActivityPreview() {
     MainActivityContent(
         timerRunning = false,
         topAppBarTitle = "MusicTimer",
-        initialSliderPosition = 0.2f,
+        sliderPosition = 3f,
+        sliderText = "3 minutes",
         onSliderValueChanged = { },
         onTimerButtonClick = { _, _ -> },
         buttonText = "Start timer"
