@@ -7,11 +7,13 @@ import com.jfalck.musictimer.data.TimeValueRepository
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
+import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
 import com.jfalck.musictimer.usecase.GetTileAdditionSuggestionUseCase
 import com.jfalck.musictimer.usecase.IncrementLaunchCountUseCase
+import com.jfalck.musictimer.usecase.IsPaidUserUseCase
 import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
 import com.jfalck.musictimer.usecase.ShouldLoadInterstitialAdUseCase
 import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
@@ -40,14 +42,25 @@ object KoinModules {
 
         single<ITimeValueRepository> { TimeValueRepository(get()) }
 
+        // Region Use Case
         single<GetLastTimeValueSelectedUseCase> { GetLastTimeValueSelectedUseCase(get()) }
         single<SetLastTimeValueSelectedUseCase> { SetLastTimeValueSelectedUseCase(get()) }
         single<GetTileAdditionSuggestionUseCase> { GetTileAdditionSuggestionUseCase(get()) }
         single<IncrementLaunchCountUseCase> { IncrementLaunchCountUseCase(get()) }
         single<ShouldLoadInterstitialAdUseCase> { ShouldLoadInterstitialAdUseCase(get()) }
+        single<IsPaidUserUseCase> { IsPaidUserUseCase(get()) }
 
-        viewModel {
-            TimerViewModel(get(), get(), get(), get(), get(), get())
+        // End Region
+
+        //Region View Model
+
+        viewModel<TimerViewModel> {
+            TimerViewModel(get(), get(), get(), get(), get())
         }
+        viewModel<AdsViewModel> {
+            AdsViewModel(get(), get())
+        }
+
+        // End Region
     }
 }

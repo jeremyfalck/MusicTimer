@@ -19,6 +19,7 @@ class DataStoreManager(private val context: Context) : CacheManager {
     private val devModeEnabledKey = booleanPreferencesKey(DEV_MODE_ENABLED_KEY)
     private val quickSettingsTimeValueKey = intPreferencesKey(QUICK_SETTINGS_TIME_VALUE_KEY)
     private val timerLaunchCountValueKey = intPreferencesKey(TIMER_LAUNCH_COUNT_VALUE_KEY)
+    private val isPaidUserValueKey = booleanPreferencesKey(IS_PAID_USER_VALUE_KEY)
 
     override suspend fun getNotificationId(): Int {
         val preferences = context.dataStore.data.first()
@@ -80,6 +81,20 @@ class DataStoreManager(private val context: Context) : CacheManager {
         }
     }
 
+    override suspend fun isPaidUserFlow(): Flow<Boolean> =
+        context.dataStore.data.map { preferences ->
+            preferences[isPaidUserValueKey] ?: false
+        }
+
+    override suspend fun isPaidUser(): Boolean =
+        context.dataStore.data.first()[isPaidUserValueKey] ?: false
+
+    override suspend fun setPaidUser(isPaid: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[isPaidUserValueKey] = isPaid
+        }
+    }
+
     companion object {
         const val DATASTORE_NAME = "MusicTimerDataStore"
         private const val NOTIFICATION_ID_KEY = "notification_id"
@@ -87,5 +102,6 @@ class DataStoreManager(private val context: Context) : CacheManager {
         private const val DEV_MODE_ENABLED_KEY = "dev_mode_enabled"
         private const val QUICK_SETTINGS_TIME_VALUE_KEY = "quick_settings_time_value"
         private const val TIMER_LAUNCH_COUNT_VALUE_KEY = "timer_launch_count_value"
+        private const val IS_PAID_USER_VALUE_KEY = "is_paid_user_value"
     }
 }
