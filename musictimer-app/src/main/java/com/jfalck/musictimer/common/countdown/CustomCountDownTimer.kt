@@ -19,24 +19,19 @@ private const val TAG = "CustomCountDownTimer"
 class CustomCountDownTimer(
     private val totalMinutes: Int,
     private val onTick: (Int) -> Unit = { },
-    private val onFinish: () -> Unit = { },
-    private val useDebugSeconds: Boolean = true
+    private val onFinish: () -> Unit = { }
 ) {
 
     private var job: Job? = null
 
-    private val unit = if (useDebugSeconds) "seconds" else "minutes"
-
     private val flow =
         (totalMinutes - 1 downTo 0).asFlow() // Emit total - 1 because the first was emitted onStart
             .onEach {
-                Log.d(TAG, "Emitting $unit: $it")
-                delay(
-                    if (useDebugSeconds) 1000 else 60000
-                )
+                Log.d(TAG, "Emitting minutes: $it")
+                delay(60000)
             } // Each minute later emit a number
             .onStart {
-                Log.d(TAG, "Total $unit: $totalMinutes")
+                Log.d(TAG, "Total minutes: $totalMinutes")
                 emit(totalMinutes)
             } // Emit total seconds immediately
             .conflate() // In case the creating of State takes some time, conflate keeps the time ticking separately
@@ -50,7 +45,7 @@ class CustomCountDownTimer(
         Log.d(TAG, "Starting timer")
         job = CoroutineScope(Dispatchers.IO).launch {
             flow.collect { minutes ->
-                Log.d(TAG, "Remaining $unit: $minutes")
+                Log.d(TAG, "Remaining minutes: $minutes")
                 when (minutes) {
                     0 -> onFinish()
                     totalMinutes -> {

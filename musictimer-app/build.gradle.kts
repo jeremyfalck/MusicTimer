@@ -30,6 +30,11 @@ android {
                 "ADMOB_MAIN_BANNER_ID",
                 "\"ca-app-pub-3940256099942544/9214589741\""
             )
+            buildConfigField(
+                "String",
+                "ADMOB_INTERSTITIAL_BANNER_ID",
+                "\"ca-app-pub-3940256099942544/1033173712\""
+            )
             applicationIdSuffix = ".debug"
         }
         release {
@@ -37,6 +42,11 @@ android {
                 "String",
                 "ADMOB_MAIN_BANNER_ID",
                 "\"ca-app-pub-2297732968203269/8358496774\""
+            )
+            buildConfigField(
+                "String",
+                "ADMOB_INTERSTITIAL_BANNER_ID",
+                "\"ca-app-pub-2297732968203269/6384669892\""
             )
             isMinifyEnabled = false
             proguardFiles(

@@ -47,7 +47,6 @@ class MuteBinder(
         Log.d(TAG, "@${hashCode()} Timer task started")
 
         CoroutineScope(coroutineDispatcher).launch {
-            val isDevModeEnabled = cacheManager.getDevModeEnabled()
 
             countDownTimer?.let {
                 Log.d(TAG, "@${this@MuteBinder.hashCode()} Cancelling previous countdown timer")
@@ -68,7 +67,7 @@ class MuteBinder(
                 mediaFocusManager.requestMediaFocus()
                 _isTimerRunning.value = false
                 wearableMessageManager.sendTimerState(false)
-            }, isDevModeEnabled).apply {
+            }).apply {
                 start()
                 wearableMessageManager.sendTimerState(true)
             }
