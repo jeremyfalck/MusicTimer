@@ -13,7 +13,6 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +29,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,6 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +50,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
@@ -55,9 +62,11 @@ import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+
 
 private const val TAG = "MainActivity"
 
@@ -68,6 +77,8 @@ class MainActivity : ComponentActivity() {
     private val notificationManager: TimerNotificationManager by inject()
 
     private var isServiceBound: Boolean = false
+
+    private var interstitialAd: InterstitialAd? = null
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -99,27 +110,64 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         initView()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            initTileSuggestionListener()
-        }
-    }
-
-    private fun initTileSuggestionListener() {
-        Log.d(TAG, "Version is at least Tiramisu")
         lifecycleScope.launch {
+            Log.d(TAG, "lifecycleScope.launch")
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 Log.d(TAG, "repeatOnLifecycle")
-                timerViewModel.showTileAdditionSuggestion.collect { shouldDisplayTileAddSuggestion ->
-                    Log.d(
-                        TAG,
-                        "shouldDisplayTileAddSuggestion: $shouldDisplayTileAddSuggestion"
-                    )
-                    if (shouldDisplayTileAddSuggestion) {
-                        suggestTile()
-                    }
+                async { initLoadInterstitialAdListeners() }
+                async { initShowInterstitialAdListeners() }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    async { initTileSuggestionListener() }
                 }
             }
         }
+    }
+
+    private suspend fun initLoadInterstitialAdListeners() {
+        timerViewModel.shouldLoadInterstitialAd.collect { shouldLoadInterstitialAd ->
+            Log.d(TAG, "shouldLoadInterstitialAd: $shouldLoadInterstitialAd")
+            if (shouldLoadInterstitialAd) {
+                loadInterstititalAd()
+            }
+        }
+    }
+
+    private suspend fun initShowInterstitialAdListeners() {
+        timerViewModel.shouldShowInterstitialAd.collect { shouldShowInterstitialAd ->
+            Log.d(TAG, "shouldShowInterstitialAd: $shouldShowInterstitialAd")
+            interstitialAd?.show(this)
+            timerViewModel.isInterstitialAdLoaded = false
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private suspend fun initTileSuggestionListener() {
+        Log.d(TAG, "initTileSuggestionListener()")
+        timerViewModel.showTileAdditionSuggestion.collect { shouldDisplayTileAddSuggestion ->
+            Log.d(TAG, "shouldDisplayTileAddSuggestion: $shouldDisplayTileAddSuggestion")
+            if (shouldDisplayTileAddSuggestion) {
+                suggestTile()
+            }
+        }
+    }
+
+    private fun loadInterstititalAd() {
+        InterstitialAd.load(
+            this,
+            BuildConfig.ADMOB_INTERSTITIAL_BANNER_ID,
+            AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d(TAG, adError.toString())
+                    interstitialAd = null
+                }
+
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    Log.d(TAG, "Ad was loaded.")
+                    this@MainActivity.interstitialAd = interstitialAd
+                    timerViewModel.isInterstitialAdLoaded = true
+                }
+            })
     }
 
 
@@ -160,11 +208,6 @@ class MainActivity : ComponentActivity() {
     private fun startMuteService(timeInMinutes: Int) {
         Log.d("MainActivity", "Instantiating MuteService")
         timerViewModel.onStartTimer(this, connection, timeInMinutes)
-        Toast.makeText(
-            this,
-            getString(R.string.timer_start_toast, timeInMinutes),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     private fun initView() {
@@ -185,7 +228,11 @@ class MainActivity : ComponentActivity() {
                 intValue
             )
 
+            val snackbarHostState = remember { SnackbarHostState() }
+            val snackBarCoroutineScope = rememberCoroutineScope()
+
             MainActivityContent(
+                snackbarHostState = snackbarHostState,
                 timerRunning = timerRunning,
                 topAppBarTitle = getString(R.string.app_name),
                 onSettingsClick = onSettingsClick,
@@ -199,7 +246,20 @@ class MainActivity : ComponentActivity() {
                         vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
                     }
                 },
-                onTimerButtonClick = ::onTimerButtonClick,
+                onTimerButtonClick = { position: Float, isTimerRunning: Boolean ->
+                    onTimerButtonClick(position, isTimerRunning)
+                    if (!isTimerRunning) {
+                        snackBarCoroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = getString(
+                                    R.string.timer_start_toast,
+                                    sliderPosition.toInt()
+                                ),
+                                actionLabel = "OK"
+                            )
+                        }
+                    }
+                },
                 buttonText = getString(if (timerRunning) R.string.stop_timer else R.string.start_timer)
             )
         }
@@ -209,6 +269,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainActivityContent(
+    snackbarHostState: SnackbarHostState,
     timerRunning: Boolean,
     topAppBarTitle: String,
     onSettingsClick: () -> Unit = {},
@@ -238,6 +299,9 @@ fun MainActivityContent(
                         onSettingsClick = onSettingsClick,
                         scrollBehavior = scrollBehavior
                     )
+                },
+                snackbarHost = {
+                    SnackbarHost(hostState = snackbarHostState)
                 },
             ) { innerPadding ->
                 MainActivitySubContent(
@@ -307,6 +371,7 @@ fun MainActivitySubContent(
 @Composable
 fun ActivityPreview() {
     MainActivityContent(
+        SnackbarHostState(),
         timerRunning = false,
         topAppBarTitle = "MusicTimer",
         sliderPosition = 3f,

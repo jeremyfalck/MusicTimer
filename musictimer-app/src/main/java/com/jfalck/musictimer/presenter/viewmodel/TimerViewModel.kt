@@ -10,6 +10,7 @@ import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
 import com.jfalck.musictimer.usecase.GetTileAdditionSuggestionUseCase
 import com.jfalck.musictimer.usecase.IncrementLaunchCountUseCase
 import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
+import com.jfalck.musictimer.usecase.ShouldLoadInterstitialAdUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ class TimerViewModel(
     private val getLastTimeValueSelectedUseCase: GetLastTimeValueSelectedUseCase,
     private val setLastTimeValueSelectedUseCase: SetLastTimeValueSelectedUseCase,
     private val getTileAdditionSuggestionUseCase: GetTileAdditionSuggestionUseCase,
+    private val shouldShowInterstitialAdUseCase: ShouldLoadInterstitialAdUseCase,
     private val incrementLaunchCountUseCase: IncrementLaunchCountUseCase,
     private val muteServiceManager: MuteServiceManager
 ) : ViewModel() {
@@ -32,6 +34,14 @@ class TimerViewModel(
 
     private val _showTileAdditionSuggestion: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val showTileAdditionSuggestion: StateFlow<Boolean> = _showTileAdditionSuggestion
+
+    private val _shouldLoadInterstitialAd: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val shouldLoadInterstitialAd: StateFlow<Boolean> = _shouldLoadInterstitialAd
+
+    private val _shouldShowInterstitialAd: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val shouldShowInterstitialAd: StateFlow<Boolean> = _shouldShowInterstitialAd
+
+    var isInterstitialAdLoaded: Boolean = false
 
     init {
         viewModelScope.launch {
@@ -52,11 +62,25 @@ class TimerViewModel(
         muteServiceManager.startMuteService(context, connection, time)
         viewModelScope.launch {
             incrementLaunchCountUseCase()
-            val shouldSuggestTile = getTileAdditionSuggestionUseCase()
-            Log.d(TAG, "should suggest tile: $shouldSuggestTile")
-            _showTileAdditionSuggestion.value = shouldSuggestTile
+            manageTileSuggestion()
+            manageInterstitialAd()
             setLastTimeValueSelectedUseCase(time.toFloat())
         }
+    }
+
+    private suspend fun manageTileSuggestion() {
+        val shouldSuggestTile = getTileAdditionSuggestionUseCase()
+        Log.d(TAG, "should suggest tile: $shouldSuggestTile")
+        _showTileAdditionSuggestion.value = shouldSuggestTile
+    }
+
+    private suspend fun manageInterstitialAd() {
+        val shouldLoadAd = !isInterstitialAdLoaded
+        Log.d(TAG, "should load ad: $shouldLoadAd")
+        _shouldLoadInterstitialAd.value = shouldLoadAd
+        val shouldShowAd = shouldShowInterstitialAdUseCase()
+        Log.d(TAG, "should show ad: $shouldShowAd")
+        _shouldShowInterstitialAd.value = shouldShowAd
     }
 
     fun stopMuteTimer(context: Context) =
