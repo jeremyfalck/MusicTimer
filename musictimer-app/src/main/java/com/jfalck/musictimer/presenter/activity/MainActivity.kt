@@ -301,7 +301,7 @@ fun MainActivityContent(
                 topBar = {
                     CenterAlignedTopAppBar(
                         title = topAppBarTitle,
-                        showSettingsButton = BuildConfig.DEBUG,
+                        showSettingsButton = true,
                         onSettingsClick = onSettingsClick,
                         scrollBehavior = scrollBehavior
                     )

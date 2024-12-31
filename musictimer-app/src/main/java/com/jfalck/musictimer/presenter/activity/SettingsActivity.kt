@@ -46,6 +46,7 @@ import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.queryProductDetails
+import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
@@ -64,9 +65,10 @@ class SettingsActivity : ComponentActivity() {
 
     private var showQuickTimeSlider = mutableStateOf(false)
 
-    val purchasesUpdatedListener: PurchasesUpdatedListener =
+    private val purchasesUpdatedListener: PurchasesUpdatedListener =
         PurchasesUpdatedListener { billingResult, purchases ->
-            // To be implemented in a later section.
+            Log.d(TAG, "billingResult: $billingResult")
+            Log.d(TAG, "purchases: $purchases")
         }
 
     private var billingClient: BillingClient? = null
@@ -83,7 +85,6 @@ class SettingsActivity : ComponentActivity() {
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
             )
-            // Configure other settings.
             .build()
 
         billingClient?.startConnection(object : BillingClientStateListener {
@@ -93,10 +94,11 @@ class SettingsActivity : ComponentActivity() {
 
                     val productList = listOf(
                         QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId("product_id_example")
-                            .setProductType(BillingClient.ProductType.SUBS)
+                            .setProductId("ad_free_plan")
+                            .setProductType(BillingClient.ProductType.INAPP)
                             .build()
                     )
+                    Log.d(TAG, "productList loaded: $productList")
                     val params = QueryProductDetailsParams.newBuilder()
                     params.setProductList(productList)
 
@@ -251,11 +253,13 @@ private fun SettingsActivitySubContent(
             .wrapContentHeight()
             .padding(innerPadding)
     ) {
-        DevModeOption(
-            devModeTitle,
-            onDevModeChanged,
-            isDebugEnabled
-        )
+        if (BuildConfig.DEBUG) {
+            DevModeOption(
+                devModeTitle,
+                onDevModeChanged,
+                isDebugEnabled
+            )
+        }
         QuickSettingTimeValueOption(
             quickTimeSettingTitle,
             quickTimeSettingDescription,
