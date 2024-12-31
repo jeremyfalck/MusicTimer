@@ -3,9 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:name=".MusicTimerApplication"
@@ -19,9 +20,10 @@
         android:theme="@style/Theme.MusicTimer"
         tools:targetApi="31">
 
-        <service android:name=".presenter.service.mute.MuteService"
-            android:foregroundServiceType="specialUse"
-            android:exported="false"/>
+        <service
+            android:name=".presenter.service.mute.MuteService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
 
         <service
             android:name="com.jfalck.musictimer_common.service.wear.MusicTimerWearMessagingService"
@@ -76,7 +78,8 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".presenter.ui.widget.MusicTimerGlanceReceiver"
+        <receiver
+            android:name=".presenter.ui.widget.MusicTimerGlanceReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -88,7 +91,7 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-2297732968203269~6338321175" />
+            android:value="ca-app-pub-5011970518174346~3576906672" />
 
         <activity
             android:name=".presenter.activity.MainActivity"

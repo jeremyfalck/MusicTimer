@@ -61,6 +61,7 @@ import com.jfalck.musictimer.presenter.service.tile.TimerTileService
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
+import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -73,6 +74,7 @@ private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
 
     private val timerViewModel: TimerViewModel by viewModel()
+    private val adsViewModel: AdsViewModel by viewModel()
 
     private val notificationManager: TimerNotificationManager by inject()
 
@@ -124,7 +126,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun initLoadInterstitialAdListeners() {
-        timerViewModel.shouldLoadInterstitialAd.collect { shouldLoadInterstitialAd ->
+        adsViewModel.shouldLoadInterstitialAd.collect { shouldLoadInterstitialAd ->
             Log.d(TAG, "shouldLoadInterstitialAd: $shouldLoadInterstitialAd")
             if (shouldLoadInterstitialAd) {
                 loadInterstititalAd()
@@ -133,10 +135,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun initShowInterstitialAdListeners() {
-        timerViewModel.shouldShowInterstitialAd.collect { shouldShowInterstitialAd ->
+        adsViewModel.shouldShowInterstitialAd.collect { shouldShowInterstitialAd ->
             Log.d(TAG, "shouldShowInterstitialAd: $shouldShowInterstitialAd")
             interstitialAd?.show(this)
-            timerViewModel.isInterstitialAdLoaded = false
+            adsViewModel.isInterstitialAdLoaded = false
         }
     }
 
@@ -165,7 +167,7 @@ class MainActivity : ComponentActivity() {
                 override fun onAdLoaded(interstitialAd: InterstitialAd) {
                     Log.d(TAG, "Ad was loaded.")
                     this@MainActivity.interstitialAd = interstitialAd
-                    timerViewModel.isInterstitialAdLoaded = true
+                    adsViewModel.isInterstitialAdLoaded = true
                 }
             })
     }
@@ -208,6 +210,7 @@ class MainActivity : ComponentActivity() {
     private fun startMuteService(timeInMinutes: Int) {
         Log.d("MainActivity", "Instantiating MuteService")
         timerViewModel.onStartTimer(this, connection, timeInMinutes)
+        adsViewModel.updateAdState()
     }
 
     private fun initView() {
@@ -219,6 +222,7 @@ class MainActivity : ComponentActivity() {
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
             val sliderPosition by
             timerViewModel.timeValueSelected.collectAsState(initial = 1f).asFloatState()
+            val isPaidUser: Boolean by adsViewModel.isPaidUser.collectAsState()
 
             val intValue = sliderPosition.toInt()
 
@@ -233,6 +237,7 @@ class MainActivity : ComponentActivity() {
 
             MainActivityContent(
                 snackbarHostState = snackbarHostState,
+                isPaidUser = isPaidUser,
                 timerRunning = timerRunning,
                 topAppBarTitle = getString(R.string.app_name),
                 onSettingsClick = onSettingsClick,
@@ -270,6 +275,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainActivityContent(
     snackbarHostState: SnackbarHostState,
+    isPaidUser: Boolean,
     timerRunning: Boolean,
     topAppBarTitle: String,
     onSettingsClick: () -> Unit = {},
@@ -305,6 +311,7 @@ fun MainActivityContent(
                 },
             ) { innerPadding ->
                 MainActivitySubContent(
+                    isPaidUser = isPaidUser,
                     innerPadding = innerPadding,
                     sliderPosition = sliderPosition,
                     sliderText = sliderText,
@@ -321,6 +328,7 @@ fun MainActivityContent(
 
 @Composable
 fun MainActivitySubContent(
+    isPaidUser: Boolean,
     innerPadding: PaddingValues,
     sliderPosition: Float,
     sliderText: String,
@@ -363,7 +371,9 @@ fun MainActivitySubContent(
             Text(buttonText)
         }
         Spacer(modifier = Modifier.weight(1f))
-        AdmobBanner(modifier = Modifier.fillMaxWidth())
+        if (!isPaidUser) {
+            AdmobBanner(modifier = Modifier.fillMaxWidth())
+        }
     }
 }
 
@@ -372,10 +382,11 @@ fun MainActivitySubContent(
 fun ActivityPreview() {
     MainActivityContent(
         SnackbarHostState(),
+        true,
         timerRunning = false,
         topAppBarTitle = "MusicTimer",
-        sliderPosition = 3f,
-        sliderText = "3 minutes",
+        sliderPosition = 30f,
+        sliderText = "30 minutes",
         onSliderValueChanged = { },
         onTimerButtonClick = { _, _ -> },
         buttonText = "Start timer"

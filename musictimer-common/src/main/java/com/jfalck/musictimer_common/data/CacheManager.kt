@@ -20,4 +20,8 @@ interface CacheManager {
 
     suspend fun getTimerLaunchCount(): Int
     suspend fun setTimerLaunchCount(count: Int)
+
+    suspend fun isPaidUserFlow(): Flow<Boolean>
+    suspend fun isPaidUser(): Boolean
+    suspend fun setPaidUser(isPaid: Boolean)
 }

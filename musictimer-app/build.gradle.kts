@@ -41,12 +41,12 @@ android {
             buildConfigField(
                 "String",
                 "ADMOB_MAIN_BANNER_ID",
-                "\"ca-app-pub-2297732968203269/8358496774\""
+                "\"ca-app-pub-5011970518174346/5764086315\""
             )
             buildConfigField(
                 "String",
                 "ADMOB_INTERSTITIAL_BANNER_ID",
-                "\"ca-app-pub-2297732968203269/6384669892\""
+                "\"ca-app-pub-5011970518174346/5600434789\""
             )
             isMinifyEnabled = false
             proguardFiles(
