@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -36,6 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.ProductDetailsResult
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.queryProductDetails
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
@@ -45,16 +55,87 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
+
+private const val TAG = "SettingsActivity"
+
 class SettingsActivity : ComponentActivity() {
 
     private val dataStoreManager: CacheManager by inject()
 
     private var showQuickTimeSlider = mutableStateOf(false)
 
+    val purchasesUpdatedListener: PurchasesUpdatedListener =
+        PurchasesUpdatedListener { billingResult, purchases ->
+            // To be implemented in a later section.
+        }
+
+    private var billingClient: BillingClient? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initView()
+    }
+
+    private fun showBillingDialog() {
+        billingClient = BillingClient.newBuilder(this)
+            .setListener(purchasesUpdatedListener)
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+            )
+            // Configure other settings.
+            .build()
+
+        billingClient?.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "billingResult is OK")
+
+                    val productList = listOf(
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId("product_id_example")
+                            .setProductType(BillingClient.ProductType.SUBS)
+                            .build()
+                    )
+                    val params = QueryProductDetailsParams.newBuilder()
+                    params.setProductList(productList)
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val productDetailResult: ProductDetailsResult? =
+                            billingClient?.queryProductDetails(params.build())
+                        Log.d(TAG, "products found: $productDetailResult")
+
+                        productDetailResult?.productDetailsList?.firstOrNull()
+                            ?.let { productDetails ->
+                                val productDetailsParamsList = listOf(
+                                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                                        .setProductDetails(productDetails)
+                                        .build()
+                                )
+
+                                val billingFlowParams = BillingFlowParams.newBuilder()
+                                    .setProductDetailsParamsList(productDetailsParamsList)
+                                    .build()
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    billingClient?.launchBillingFlow(
+                                        this@SettingsActivity,
+                                        billingFlowParams
+                                    )
+                                }
+                            }
+                    }
+
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                Log.d(TAG, "Billing Service is disconnected")
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+            }
+        })
+
     }
 
     private fun initView() {
@@ -89,7 +170,8 @@ class SettingsActivity : ComponentActivity() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
                     }
-                }
+                },
+                onRemoveAdsClick = { showBillingDialog() }
             )
         }
     }
@@ -107,7 +189,8 @@ private fun SettingsActivityContent(
     onQuickTimeClicked: () -> Unit = {},
     quickTimeSettingsValue: Int = 20,
     showTimeQuickSettingDialog: Boolean = false,
-    onQuickTimeValueSelected: (Float) -> Unit = {}
+    onQuickTimeValueSelected: (Float) -> Unit = {},
+    onRemoveAdsClick: () -> Unit = {}
 ) {
     MusicTimerTheme(
         darkTheme = isSystemInDarkTheme()
@@ -140,7 +223,8 @@ private fun SettingsActivityContent(
                     onQuickTimeClicked,
                     quickTimeSettingsValue,
                     showTimeQuickSettingDialog,
-                    onQuickTimeValueSelected
+                    onQuickTimeValueSelected,
+                    onRemoveAdsClick
                 )
             }
         }
@@ -160,6 +244,7 @@ private fun SettingsActivitySubContent(
     quickSettingsTimeValue: Int,
     showTimeQuickSettingDialog: Boolean = false,
     onQuickTimeValueSelected: (Float) -> Unit = {},
+    onRemoveAdsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -185,6 +270,7 @@ private fun SettingsActivitySubContent(
             steps = 91,
             enabled = true
         )
+        RemoveAds(onClick = onRemoveAdsClick)
     }
 }
 
@@ -212,6 +298,26 @@ fun DevModeOption(
             modifier = Modifier.wrapContentSize(),
             checked = isDebugEnabled,
             onCheckedChange = onDevModeChanged
+        )
+    }
+}
+
+@Composable
+fun RemoveAds(onClick: () -> Unit = { }) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = CenterVertically,
+    ) {
+        Text(
+            text = "Remove ads",
+            modifier = Modifier.wrapContentSize(),
+            color = MaterialTheme.colorScheme.primary,
+            fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
+            fontSize = MaterialTheme.typography.titleMedium.fontSize
         )
     }
 }

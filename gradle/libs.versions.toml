@@ -11,6 +11,7 @@ composeBom = "2024.09.02"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 crashlytics = "3.0.2"
+playBilling = "7.1.1"
 
 koinVersion = "3.5.6"
 dataStoreVersion = "1.1.1"
@@ -72,13 +73,22 @@ glance-material3 = { group = "androidx.glance", name = "glance-material3", versi
 ## Firebase
 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics"}
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics"}
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+
+## Play Billing
+play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
+play-billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "playBilling" }
 
 [bundles]
 firebase = [
     "firebase-analytics",
     "firebase-crashlytics"
+]
+
+playBilling = [
+    "play-billing",
+    "play-billing-ktx"
 ]
 
 
@@ -88,5 +98,5 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics"}
+crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
 
