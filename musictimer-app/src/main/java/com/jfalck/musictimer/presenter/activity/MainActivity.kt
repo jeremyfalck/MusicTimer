@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -60,6 +59,7 @@ import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.service.tile.TimerTileService
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
+import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
 import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
@@ -344,13 +344,12 @@ fun MainActivitySubContent(
             .fillMaxSize()
             .padding(innerPadding)
     ) {
-        Slider(
-            modifier = Modifier.padding(16.dp),
+        TimeSelectionSlider(
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 36.dp),
             value = sliderPosition,
-            valueRange = 1F..90F,
             onValueChange = onSliderValueChanged,
+            valueRange = 1F..90F,
             steps = 90,
-            enabled = true
         )
 
         Text(
@@ -364,12 +363,13 @@ fun MainActivitySubContent(
             onClick = { onTimerButtonClick(sliderPosition, timerRunning) },
             modifier = Modifier.padding(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Text(buttonText)
         }
+
         Spacer(modifier = Modifier.weight(1f))
         if (!isPaidUser) {
             AdmobBanner(modifier = Modifier.fillMaxWidth())

@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -49,6 +48,7 @@ import com.android.billingclient.api.queryProductDetails
 import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
+import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
 import com.jfalck.musictimer_common.data.CacheManager
 import kotlinx.coroutines.CoroutineScope
@@ -266,13 +266,12 @@ private fun SettingsActivitySubContent(
             onClick = onQuickTimeClicked,
             value = quickSettingsTimeValue
         )
-        if (showTimeQuickSettingDialog) Slider(
-            modifier = Modifier.padding(16.dp),
+        if (showTimeQuickSettingDialog) TimeSelectionSlider(
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp),
             value = quickSettingsTimeValue.toFloat(),
             valueRange = 1F..90F,
             onValueChange = onQuickTimeValueSelected,
-            steps = 91,
-            enabled = true
+            steps = 90,
         )
         RemoveAds(onClick = onRemoveAdsClick)
     }
