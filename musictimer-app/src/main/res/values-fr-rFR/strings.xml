@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MusicTimer</string>
     <string name="notification_channel_name">music_timer_notification_channel</string>
     <string name="notification_channel_desc">Utilisé pour notifier du temps restant avant de requérir le son des médias</string>
     <string name="notification_message_remaining_time">La musique s\'arrêtera dans %d minutes</string>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MusicTimer</string>
+    <string name="app_name" translatable="false">MusicTimer</string>
     <string name="notification_channel_name">music_timer_notification_channel</string>
     <string name="notification_channel_desc">Used to notify about time remaining before requesting media sound focus</string>
     <string name="notification_message_remaining_time">Music will stop playing in %d minutes</string>
