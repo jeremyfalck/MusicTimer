@@ -94,7 +94,9 @@ dependencies {
     implementation(libs.glance.material)
     implementation(libs.glance.material3)
 
-    implementation(libs.compose.navigation)
+    // Navigation
+    implementation(libs.bundles.navigation)
+    testImplementation(libs.navigation.testing)
 
     implementation(libs.kotlinSerialization)
 

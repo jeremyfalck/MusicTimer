@@ -104,11 +104,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".presenter.activity.SettingsActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MusicTimer" />
-
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"

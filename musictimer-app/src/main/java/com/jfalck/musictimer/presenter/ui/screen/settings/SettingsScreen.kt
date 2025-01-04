@@ -19,31 +19,65 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.jfalck.musictimer.R
+import com.jfalck.musictimer.presenter.TextManager
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
+import com.jfalck.musictimer.presenter.vibration.VibratorManager
+import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.serialization.Serializable
 
 
 @Serializable
 object SettingsScreen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    topAppBarTitle: String = "Preferences",
-    quickTimeSettingTitle: String = "Quick Time Settings",
-    quickTimeSettingDescription: String = "Set the default time for the quick time settings",
-    onQuickTimeClicked: () -> Unit = {},
-    quickTimeSettingsValue: Int = 20,
-    showTimeQuickSettingDialog: Boolean = false,
-    onQuickTimeValueSelected: (Float) -> Unit = {},
-    onRemoveAdsClick: () -> Unit = {}
+    timerViewModel: TimerViewModel,
+    onRemoveAdsClick: () -> Unit = {},
+    vibratorManager: VibratorManager,
+    textManager: TextManager
+) {
+
+    val quickSettingsTimeValue =
+        timerViewModel.quickSettingsTimeValueSelected.collectAsState()
+
+    SettingsContent(
+        quickSettingsTimeValue = quickSettingsTimeValue.value,
+        onRemoveAdsClick = onRemoveAdsClick,
+        appBarTitle = textManager.getString(R.string.settings),
+        quickTimeSettingTitle = textManager.getString(R.string.quick_time_settings),
+        quickTimeSettingDescription = textManager.getString(R.string.quick_time_settings_desc),
+        onQuickTimeValueSelected = { value ->
+            timerViewModel.setQuickSettingsTimeValue(value.toInt())
+            vibratorManager.vibrate()
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsContent(
+    quickSettingsTimeValue: Int,
+    onRemoveAdsClick: () -> Unit,
+    appBarTitle: String,
+    quickTimeSettingTitle: String,
+    quickTimeSettingDescription: String,
+    onQuickTimeValueSelected: (Float) -> Unit,
 ) {
     MusicTimerTheme(
         darkTheme = isSystemInDarkTheme()
@@ -55,26 +89,28 @@ fun SettingsScreen(
 
             val scrollBehavior =
                 TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+            var showQuickTimeSlider by remember { mutableStateOf(false) }
+
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-
                 topBar = {
                     CenterAlignedTopAppBar(
-                        title = topAppBarTitle,
+                        title = appBarTitle,
                         showSettingsButton = false,
                         scrollBehavior = scrollBehavior
                     )
                 },
             ) { innerPadding ->
                 SettingsActivitySubContent(
-                    innerPadding,
-                    quickTimeSettingTitle,
-                    quickTimeSettingDescription,
-                    onQuickTimeClicked,
-                    quickTimeSettingsValue,
-                    showTimeQuickSettingDialog,
-                    onQuickTimeValueSelected,
-                    onRemoveAdsClick
+                    innerPadding = innerPadding,
+                    quickTimeSettingTitle = quickTimeSettingTitle,
+                    quickTimeSettingDescription = quickTimeSettingDescription,
+                    onQuickTimeClicked = { showQuickTimeSlider = !showQuickTimeSlider },
+                    quickSettingsTimeValue = quickSettingsTimeValue,
+                    showTimeQuickSettingDialog = showQuickTimeSlider,
+                    onQuickTimeValueSelected = onQuickTimeValueSelected,
+                    onRemoveAdsClick = onRemoveAdsClick
                 )
             }
         }
@@ -179,14 +215,17 @@ fun QuickSettingTimeValueOption(
 }
 
 @Preview
+@PreviewDynamicColors
+@PreviewScreenSizes
+@PreviewLightDark
 @Composable
 fun SettingsActivityPreview() {
-    SettingsScreen(topAppBarTitle = "Preferences",
-        quickTimeSettingTitle = "Quick Time Settings",
-        quickTimeSettingDescription = "",
-        onQuickTimeClicked = {},
-        quickTimeSettingsValue = 20,
-        showTimeQuickSettingDialog = false,
-        onQuickTimeValueSelected = {},
-        onRemoveAdsClick = {})
+    SettingsContent(
+        quickSettingsTimeValue = 50,
+        onRemoveAdsClick = {},
+        appBarTitle = "Preferences",
+        quickTimeSettingTitle = "Minuteur pour les raccourcis",
+        quickTimeSettingDescription = "Utilisé par le widget et dans l'accès rapide",
+        onQuickTimeValueSelected = {}
+    )
 }

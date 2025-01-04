@@ -1,12 +1,17 @@
 package com.jfalck.musictimer.di
 
+import com.jfalck.musictimer.AdManager
+import com.jfalck.musictimer.billing.BillingManager
 import com.jfalck.musictimer.common.media.MediaFocusManager
 import com.jfalck.musictimer.common.wear.PhoneWearMessageProcessor
 import com.jfalck.musictimer.data.ITimeValueRepository
 import com.jfalck.musictimer.data.TimeValueRepository
+import com.jfalck.musictimer.presenter.TextManager
+import com.jfalck.musictimer.presenter.TileManager
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.service.mute.MuteBinder
 import com.jfalck.musictimer.presenter.service.mute.MuteServiceManager
+import com.jfalck.musictimer.presenter.vibration.VibratorManager
 import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
@@ -41,6 +46,11 @@ object KoinModules {
             MuteBinder(get(), get(), get(), get(named(IO_DISPATCHER_NAME)), get())
         }
         single { MuteServiceManager(get()) }
+        single { VibratorManager(androidContext()) }
+        single { TextManager(androidContext()) }
+        single { BillingManager(androidContext()) }
+        single { AdManager(androidContext()) }
+        single { TileManager(androidContext()) }
 
         single<ITimeValueRepository> { TimeValueRepository(get()) }
 

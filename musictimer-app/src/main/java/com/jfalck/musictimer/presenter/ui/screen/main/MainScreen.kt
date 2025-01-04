@@ -1,6 +1,5 @@
 package com.jfalck.musictimer.presenter.ui.screen.main
 
-import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +12,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -20,18 +20,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.asFloatState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.jfalck.musictimer.R
+import com.jfalck.musictimer.presenter.TextManager
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
+import com.jfalck.musictimer.presenter.ui.screen.settings.SettingsScreen
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
+import com.jfalck.musictimer.presenter.vibration.VibratorManager
+import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
+import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -40,21 +52,27 @@ object MainScreen
 
 @Composable
 fun MainScreen(
-    context: Context,
-    isTimerRunning: Boolean,
-    sliderPosition: Float,
-    isPaidUser: Boolean,
-    notifyTimeValueChanged: (Float) -> Unit,
-    onTimerButtonClick: (Float, Boolean) -> Unit,
-    onSettingsClicked: () -> Unit
+    timerViewModel: TimerViewModel,
+    adsViewModel: AdsViewModel,
+    navController: NavHostController,
+    vibratorManager: VibratorManager,
+    textManager: TextManager,
+    startMuteTimer: (Float) -> Unit,
+    stopMuteTimer: () -> Unit
+
 ) {
 
-    val intValue = sliderPosition.toInt()
+    val sliderPosition by
+    timerViewModel.timeValueSelected.collectAsState(initial = 1f).asFloatState()
+    val intSliderValue = sliderPosition.toInt()
 
-    val sliderText = context.resources.getQuantityString(
+    val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
+
+    val isPaidUser = adsViewModel.isPaidUser.collectAsState(initial = false)
+
+    val sliderText = textManager.getQuantityString(
         R.plurals.timer_value_selected,
-        intValue,
-        intValue
+        intSliderValue
     )
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -62,31 +80,38 @@ fun MainScreen(
 
     MainActivityContent(
         snackbarHostState = snackbarHostState,
-        isPaidUser = isPaidUser,
-        timerRunning = isTimerRunning,
-        topAppBarTitle = context.getString(R.string.app_name),
-        onSettingsClick = onSettingsClicked,
+        isPaidUser = isPaidUser.value,
+        timerRunning = timerRunning,
+        topAppBarTitle = textManager.getString(R.string.app_name),
+        onSettingsClick = { navController.navigate(SettingsScreen) },
         sliderPosition = sliderPosition,
         sliderText = sliderText,
-        onSliderValueChanged = notifyTimeValueChanged,
-        onTimerButtonClick = { position: Float, timerRunning: Boolean ->
-            onTimerButtonClick(position, timerRunning)
-            if (!timerRunning) {
+        onSliderValueChanged = {
+            vibratorManager.vibrate()
+            timerViewModel.setTimeValueSelected(it)
+        },
+        onTimerButtonClick = { position: Float, isTimerRunning: Boolean ->
+            if (timerRunning) {
+                stopMuteTimer()
+            } else {
+                startMuteTimer(position)
+            }
+            if (!isTimerRunning) {
                 snackBarCoroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = context.getString(
+                        message = textManager.getString(
                             R.string.timer_start_toast,
                             sliderPosition.toInt()
                         ),
-                        actionLabel = "OK"
+                        actionLabel = "OK",
+                        duration = SnackbarDuration.Short
                     )
                 }
             }
         },
-        buttonText = context.getString(if (isTimerRunning) R.string.stop_timer else R.string.start_timer)
+        buttonText = textManager.getString(if (timerRunning) R.string.stop_timer else R.string.start_timer)
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,6 +221,9 @@ fun MainActivitySubContent(
 
 @Preview(showBackground = true)
 @Composable
+@PreviewLightDark
+@PreviewDynamicColors
+@PreviewScreenSizes
 fun ActivityPreview() {
     MainActivityContent(
         SnackbarHostState(),
