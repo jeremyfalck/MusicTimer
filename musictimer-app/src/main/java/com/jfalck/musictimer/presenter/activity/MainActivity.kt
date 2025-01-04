@@ -19,7 +19,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jfalck.musictimer.AdManager
-import com.jfalck.musictimer.billing.BillingManager
 import com.jfalck.musictimer.presenter.TextManager
 import com.jfalck.musictimer.presenter.TileManager
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
@@ -27,6 +26,7 @@ import com.jfalck.musictimer.presenter.ui.screen.main.MainScreen
 import com.jfalck.musictimer.presenter.ui.screen.settings.SettingsScreen
 import com.jfalck.musictimer.presenter.vibration.VibratorManager
 import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
+import com.jfalck.musictimer.presenter.viewmodel.BillingViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -40,12 +40,12 @@ class MainActivity : ComponentActivity() {
 
     private val timerViewModel: TimerViewModel by viewModel()
     private val adsViewModel: AdsViewModel by viewModel()
+    private val billingViewModel: BillingViewModel by viewModel()
 
     // TODO : Move all of these in viewModels
     private val notificationManager: TimerNotificationManager by inject()
     private val vibratorManager: VibratorManager by inject()
     private val textManager: TextManager by inject()
-    private val billingManager: BillingManager by inject()
     private val adManager: AdManager by inject()
     private val tileManager: TileManager by inject()
 
@@ -82,15 +82,32 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         initView()
+        billingViewModel.initBilling()
         lifecycleScope.launch {
             Log.d(TAG, "lifecycleScope.launch")
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 Log.d(TAG, "repeatOnLifecycle")
                 async { initLoadInterstitialAdListeners() }
                 async { initShowInterstitialAdListeners() }
+                async { observeBillingConnection() }
+                async { observeBillingPurchases() }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     async { initTileSuggestionListener() }
                 }
+            }
+        }
+    }
+
+    private suspend fun observeBillingPurchases() {
+        billingViewModel.purchases.collect { purchases ->
+            Log.d(TAG, purchases.toString())
+        }
+    }
+
+    private suspend fun observeBillingConnection() {
+        billingViewModel.isBillingSystemConnected.collect { isBillingSystemConnected ->
+            if (isBillingSystemConnected) {
+                billingViewModel.getPurchases()
             }
         }
     }
@@ -135,30 +152,27 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController = navController, startDestination = MainScreen) {
                 composable<MainScreen> {
-                    MainScreen(
-                        timerViewModel = timerViewModel,
+                    MainScreen(timerViewModel = timerViewModel,
                         adsViewModel = adsViewModel,
                         navController = navController,
                         vibratorManager = vibratorManager,
                         textManager = textManager,
                         startMuteTimer = { position: Float ->
                             timerViewModel.onStartTimer(
-                                this@MainActivity,
-                                connection,
-                                position.toInt()
+                                this@MainActivity, connection, position.toInt()
                             )
                             adsViewModel.updateAdState()
                         },
                         stopMuteTimer = {
                             timerViewModel.stopMuteTimer(this@MainActivity)
-                        }
-                    )
+                        })
                 }
                 composable<SettingsScreen> {
                     SettingsScreen(
                         timerViewModel = timerViewModel,
+                        adsViewModel = adsViewModel,
                         navController = navController,
-                        onRemoveAdsClick = { billingManager.showBillingDialog(this@MainActivity) },
+                        onRemoveAdsClick = { billingViewModel.showBillingDialog(this@MainActivity) },
                         vibratorManager = vibratorManager,
                         textManager = textManager
                     )

@@ -38,6 +38,7 @@ import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
 import com.jfalck.musictimer.presenter.vibration.VibratorManager
+import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.serialization.Serializable
 
@@ -48,6 +49,7 @@ object SettingsScreen
 @Composable
 fun SettingsScreen(
     timerViewModel: TimerViewModel,
+    adsViewModel: AdsViewModel,
     navController: NavHostController,
     onRemoveAdsClick: () -> Unit = {},
     vibratorManager: VibratorManager,
@@ -57,9 +59,13 @@ fun SettingsScreen(
     val quickSettingsTimeValue =
         timerViewModel.quickSettingsTimeValueSelected.collectAsState()
 
+
+    val isPaidUser = adsViewModel.isPaidUser.collectAsState()
+
     SettingsContent(
         showBackButton = navController.previousBackStackEntry != null,
         onBack = { navController.navigateUp() },
+        isPaidUser = isPaidUser.value,
         quickSettingsTimeValue = quickSettingsTimeValue.value,
         onRemoveAdsClick = onRemoveAdsClick,
         appBarTitle = textManager.getString(R.string.settings),
@@ -77,6 +83,7 @@ fun SettingsScreen(
 fun SettingsContent(
     showBackButton: Boolean,
     onBack: () -> Unit,
+    isPaidUser: Boolean,
     quickSettingsTimeValue: Int,
     onRemoveAdsClick: () -> Unit,
     appBarTitle: String,
@@ -110,6 +117,7 @@ fun SettingsContent(
                 },
             ) { innerPadding ->
                 SettingsActivitySubContent(
+                    isPaidUser = isPaidUser,
                     innerPadding = innerPadding,
                     quickTimeSettingTitle = quickTimeSettingTitle,
                     quickTimeSettingDescription = quickTimeSettingDescription,
@@ -127,6 +135,7 @@ fun SettingsContent(
 
 @Composable
 private fun SettingsActivitySubContent(
+    isPaidUser: Boolean,
     innerPadding: PaddingValues,
     quickTimeSettingTitle: String,
     quickTimeSettingDescription: String,
@@ -154,7 +163,9 @@ private fun SettingsActivitySubContent(
             onValueChange = onQuickTimeValueSelected,
             steps = 90,
         )
-        RemoveAds(onClick = onRemoveAdsClick)
+        if (!isPaidUser) {
+            RemoveAds(onClick = onRemoveAdsClick)
+        }
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "v${BuildConfig.VERSION_NAME}${if (BuildConfig.DEBUG) " debug" else ""}",
@@ -241,6 +252,7 @@ fun TouchableSurface(onClick: () -> Unit, body: @Composable () -> Unit) {
 @Composable
 fun SettingsActivityPreview() {
     SettingsContent(
+        isPaidUser = false,
         quickSettingsTimeValue = 50,
         showBackButton = true,
         onBack = {},

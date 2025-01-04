@@ -88,6 +88,7 @@ glance-material3 = { group = "androidx.glance", name = "glance-material3", versi
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 
 ## Play Billing
 play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
@@ -100,7 +101,8 @@ kotlinSerialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-seriali
 [bundles]
 firebase = [
     "firebase-analytics",
-    "firebase-crashlytics"
+    "firebase-crashlytics",
+    "firebase-firestore"
 ]
 
 playBilling = [
