@@ -49,7 +49,9 @@ android {
                 "ADMOB_INTERSTITIAL_BANNER_ID",
                 "\"ca-app-pub-5011970518174346/5600434789\""
             )
-            isMinifyEnabled = false
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
