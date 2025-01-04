@@ -67,10 +67,12 @@ class MusicTimerWidget : GlanceAppWidget(), KoinComponent {
                     if (isTimerRunning.value) {
                         muteServiceManager.stopMuteService(context)
                     } else {
-                        quickSettingsTimeValue?.value?.let { timeValue ->
-                            connection?.let {
-                                muteServiceManager.startMuteService(context, it, timeValue)
-                            }
+                        connection?.let {
+                            muteServiceManager.startMuteService(
+                                context,
+                                it,
+                                quickSettingsTimeValue.value
+                            )
                         }
                     }
                 }

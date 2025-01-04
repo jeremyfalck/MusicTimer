@@ -8,10 +8,14 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.2"
 composeBom = "2024.09.02"
+navigation = "2.8.5"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 crashlytics = "3.0.2"
 playBilling = "7.1.1"
+
+kotlinSerialization = "2.0.0"
+kotlinSerializationLib = "1.6.3"
 
 koinVersion = "3.5.6"
 dataStoreVersion = "1.1.1"
@@ -40,6 +44,15 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+## Navigation
+compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+navigation_fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigation" }
+navigation-dynamic-features-fragment = { group = "androidx.navigation", name = "navigation-dynamic-features-fragment", version.ref = "navigation" }
+
+navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigation" }
+
 
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koinVersion" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStoreVersion" }
@@ -75,15 +88,21 @@ glance-material3 = { group = "androidx.glance", name = "glance-material3", versi
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 
 ## Play Billing
 play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
 play-billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "playBilling" }
 
+
+## Serialization
+kotlinSerialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerializationLib" }
+
 [bundles]
 firebase = [
     "firebase-analytics",
-    "firebase-crashlytics"
+    "firebase-crashlytics",
+    "firebase-firestore"
 ]
 
 playBilling = [
@@ -91,6 +110,13 @@ playBilling = [
     "play-billing-ktx"
 ]
 
+navigation = [
+    "compose-navigation",
+    "navigation_fragment",
+    "navigation-ui",
+    "navigation-dynamic-features-fragment"
+
+]
 
 
 [plugins]
@@ -99,4 +125,5 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
 

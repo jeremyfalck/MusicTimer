@@ -63,7 +63,7 @@ class TimerTileService : TileService() {
         if (isActive) {
             Log.d(TAG, "Starting timer service")
             CoroutineScope(Dispatchers.IO).launch {
-                dataStoreManager.getQuickSettingsTimeValue()?.let { timeValue ->
+                dataStoreManager.getQuickSettingsTimeValue().let { timeValue ->
                     connection?.let {
                         muteServiceManager.startMuteService(this@TimerTileService, it, timeValue)
                     }
