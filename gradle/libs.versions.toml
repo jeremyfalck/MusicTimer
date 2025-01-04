@@ -8,10 +8,14 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.2"
 composeBom = "2024.09.02"
+composeNavigation = "2.8.5"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 crashlytics = "3.0.2"
 playBilling = "7.1.1"
+
+kotlinSerialization = "2.0.0"
+kotlinSerializationLib = "1.6.3"
 
 koinVersion = "3.5.6"
 dataStoreVersion = "1.1.1"
@@ -40,6 +44,10 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+## Navigation
+compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "composeNavigation" }
+
 
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koinVersion" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStoreVersion" }
@@ -80,6 +88,10 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
 play-billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "playBilling" }
 
+
+## Serialization
+kotlinSerialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerializationLib" }
+
 [bundles]
 firebase = [
     "firebase-analytics",
@@ -99,4 +111,5 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
 

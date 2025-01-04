@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.StatusBarManager
 import android.content.ComponentName
-import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -16,39 +15,27 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asFloatState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.ProductDetailsResult
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.queryProductDetails
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
@@ -57,12 +44,12 @@ import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.notification.TimerNotificationManager
 import com.jfalck.musictimer.presenter.service.tile.TimerTileService
-import com.jfalck.musictimer.presenter.ui.AdmobBanner
-import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
-import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
-import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
+import com.jfalck.musictimer.presenter.ui.screen.main.MainScreen
+import com.jfalck.musictimer.presenter.ui.screen.settings.SettingsScreen
 import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -99,6 +86,8 @@ class MainActivity : ComponentActivity() {
     ) {
         // do nothing
     }
+
+    private var showQuickTimeSlider = mutableStateOf(false)
 
     override fun onStop() {
         super.onStop()
@@ -213,182 +202,127 @@ class MainActivity : ComponentActivity() {
         adsViewModel.updateAdState()
     }
 
+    private val purchasesUpdatedListener: PurchasesUpdatedListener =
+        PurchasesUpdatedListener { billingResult, purchases ->
+            Log.d(TAG, "billingResult: $billingResult")
+            Log.d(TAG, "purchases: $purchases")
+        }
+
+    private var billingClient: BillingClient? = null
+
+    private fun showBillingDialog() {
+        billingClient = BillingClient.newBuilder(this)
+            .setListener(purchasesUpdatedListener)
+            .enablePendingPurchases(
+                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+            )
+            .build()
+
+        billingClient?.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "billingResult is OK")
+
+                    val productList = listOf(
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId("ad_free_plan")
+                            .setProductType(BillingClient.ProductType.INAPP)
+                            .build()
+                    )
+                    Log.d(TAG, "productList loaded: $productList")
+                    val params = QueryProductDetailsParams.newBuilder()
+                    params.setProductList(productList)
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val productDetailResult: ProductDetailsResult? =
+                            billingClient?.queryProductDetails(params.build())
+                        Log.d(TAG, "products found: $productDetailResult")
+
+                        productDetailResult?.productDetailsList?.firstOrNull()
+                            ?.let { productDetails ->
+                                val productDetailsParamsList = listOf(
+                                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                                        .setProductDetails(productDetails)
+                                        .build()
+                                )
+
+                                val billingFlowParams = BillingFlowParams.newBuilder()
+                                    .setProductDetailsParamsList(productDetailsParamsList)
+                                    .build()
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    billingClient?.launchBillingFlow(
+                                        this@MainActivity,
+                                        billingFlowParams
+                                    )
+                                }
+                            }
+                    }
+
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                Log.d(TAG, "Billing Service is disconnected")
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+            }
+        })
+
+    }
+
     private fun initView() {
         installSplashScreen()
-        val onSettingsClick = { startActivity(Intent(this, SettingsActivity::class.java)) }
         val vibrator = getSystemService(Vibrator::class.java)
         setContent {
             notificationManager.SetPrimaryColor()
             val timerRunning by timerViewModel.isTimerRunning.collectAsState(initial = false)
             val sliderPosition by
             timerViewModel.timeValueSelected.collectAsState(initial = 1f).asFloatState()
-            val isPaidUser: Boolean by adsViewModel.isPaidUser.collectAsState()
+            val isPaidUser = adsViewModel.isPaidUser.collectAsState(initial = false)
 
-            val intValue = sliderPosition.toInt()
+            // Settings
+            val quickSettingsTimeValue =
+                timerViewModel.quickSettingsTimeValueSelected.collectAsState()
+            val showDialog by remember { showQuickTimeSlider }
 
-            val sliderText = resources.getQuantityString(
-                R.plurals.timer_value_selected,
-                intValue,
-                intValue
-            )
+            val navController = rememberNavController()
 
-            val snackbarHostState = remember { SnackbarHostState() }
-            val snackBarCoroutineScope = rememberCoroutineScope()
-
-            MainActivityContent(
-                snackbarHostState = snackbarHostState,
-                isPaidUser = isPaidUser,
-                timerRunning = timerRunning,
-                topAppBarTitle = getString(R.string.app_name),
-                onSettingsClick = onSettingsClick,
-                sliderPosition = sliderPosition,
-                sliderText = sliderText,
-                onSliderValueChanged = { sliderValue ->
-                    timerViewModel.setTimeValueSelected(
-                        sliderValue
+            NavHost(navController = navController, startDestination = MainScreen) {
+                composable<MainScreen> {
+                    MainScreen(
+                        context = this@MainActivity,
+                        isTimerRunning = timerRunning,
+                        sliderPosition = sliderPosition,
+                        isPaidUser = isPaidUser.value,
+                        notifyTimeValueChanged = {
+                            timerViewModel.setTimeValueSelected(it)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                            }
+                        },
+                        onTimerButtonClick = ::onTimerButtonClick,
+                        onSettingsClicked = { navController.navigate(SettingsScreen) }
                     )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
-                    }
-                },
-                onTimerButtonClick = { position: Float, isTimerRunning: Boolean ->
-                    onTimerButtonClick(position, isTimerRunning)
-                    if (!isTimerRunning) {
-                        snackBarCoroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = getString(
-                                    R.string.timer_start_toast,
-                                    sliderPosition.toInt()
-                                ),
-                                actionLabel = "OK"
-                            )
-                        }
-                    }
-                },
-                buttonText = getString(if (timerRunning) R.string.stop_timer else R.string.start_timer)
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainActivityContent(
-    snackbarHostState: SnackbarHostState,
-    isPaidUser: Boolean,
-    timerRunning: Boolean,
-    topAppBarTitle: String,
-    onSettingsClick: () -> Unit = {},
-    sliderPosition: Float,
-    sliderText: String,
-    onSliderValueChanged: (Float) -> Unit,
-    onTimerButtonClick: (Float, Boolean) -> Unit,
-    buttonText: String
-) {
-    MusicTimerTheme(
-        darkTheme = isSystemInDarkTheme()
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-
-            val scrollBehavior =
-                TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = topAppBarTitle,
-                        showSettingsButton = true,
-                        onSettingsClick = onSettingsClick,
-                        scrollBehavior = scrollBehavior
+                }
+                composable<SettingsScreen> {
+                    SettingsScreen(
+                        topAppBarTitle = getString(R.string.settings),
+                        quickTimeSettingTitle = getString(R.string.quick_time_settings),
+                        quickTimeSettingDescription = getString(R.string.quick_time_settings_desc),
+                        onQuickTimeClicked = { showQuickTimeSlider.value = !showDialog },
+                        quickTimeSettingsValue = quickSettingsTimeValue.value,
+                        showTimeQuickSettingDialog = showDialog,
+                        onQuickTimeValueSelected = { value ->
+                            timerViewModel.setQuickSettingsTimeValue(value.toInt())
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                            }
+                        },
+                        onRemoveAdsClick = { showBillingDialog() }
                     )
-                },
-                snackbarHost = {
-                    SnackbarHost(hostState = snackbarHostState)
-                },
-            ) { innerPadding ->
-                MainActivitySubContent(
-                    isPaidUser = isPaidUser,
-                    innerPadding = innerPadding,
-                    sliderPosition = sliderPosition,
-                    sliderText = sliderText,
-                    onSliderValueChanged = onSliderValueChanged,
-                    timerRunning = timerRunning,
-                    onTimerButtonClick = onTimerButtonClick,
-                    buttonText = buttonText
-                )
+                }
             }
-
         }
     }
-}
-
-@Composable
-fun MainActivitySubContent(
-    isPaidUser: Boolean,
-    innerPadding: PaddingValues,
-    sliderPosition: Float,
-    sliderText: String,
-    onSliderValueChanged: (Float) -> Unit,
-    timerRunning: Boolean,
-    onTimerButtonClick: (Float, Boolean) -> Unit,
-    buttonText: String
-) {
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-    ) {
-        TimeSelectionSlider(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 36.dp),
-            value = sliderPosition,
-            onValueChange = onSliderValueChanged,
-            valueRange = 1F..90F,
-            steps = 90,
-        )
-
-        Text(
-            text = sliderText,
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.secondary
-        )
-
-
-        Button(
-            onClick = { onTimerButtonClick(sliderPosition, timerRunning) },
-            modifier = Modifier.padding(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text(buttonText)
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-        if (!isPaidUser) {
-            AdmobBanner(modifier = Modifier.fillMaxWidth())
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ActivityPreview() {
-    MainActivityContent(
-        SnackbarHostState(),
-        true,
-        timerRunning = false,
-        topAppBarTitle = "MusicTimer",
-        sliderPosition = 30f,
-        sliderText = "30 minutes",
-        onSliderValueChanged = { },
-        onTimerButtonClick = { _, _ -> },
-        buttonText = "Start timer"
-    )
 }

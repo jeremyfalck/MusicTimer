@@ -22,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -45,23 +44,23 @@ import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.queryProductDetails
-import com.jfalck.musictimer.BuildConfig
 import com.jfalck.musictimer.R
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
 import com.jfalck.musictimer.presenter.ui.component.TimeSelectionSlider
+import com.jfalck.musictimer.presenter.ui.screen.settings.SettingsScreen
 import com.jfalck.musictimer.presenter.ui.theme.MusicTimerTheme
-import com.jfalck.musictimer_common.data.CacheManager
+import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 private const val TAG = "SettingsActivity"
 
 class SettingsActivity : ComponentActivity() {
 
-    private val dataStoreManager: CacheManager by inject()
+    private val timerViewModel: TimerViewModel by viewModel()
 
     private var showQuickTimeSlider = mutableStateOf(false)
 
@@ -146,20 +145,12 @@ class SettingsActivity : ComponentActivity() {
 
         setContent {
 
-            val isDebugEnabled = dataStoreManager.getDevModeEnabledFlow().collectAsState(false)
             val quickSettingsTimeValue =
-                dataStoreManager.getQuickSettingsTimeValueFlow().collectAsState(0)
+                timerViewModel.quickSettingsTimeValueSelected.collectAsState()
             val showDialog by remember { showQuickTimeSlider }
 
-            SettingsActivityContent(
+            SettingsScreen(
                 topAppBarTitle = getString(R.string.settings),
-                devModeTitle = getString(R.string.dev_mode),
-                onDevModeChanged = { isChecked ->
-                    CoroutineScope(Dispatchers.IO).launch {
-                        dataStoreManager.setDevModeEnabled(isChecked)
-                    }
-                },
-                isDebugEnabled = isDebugEnabled.value,
                 quickTimeSettingTitle = getString(R.string.quick_time_settings),
                 quickTimeSettingDescription = getString(R.string.quick_time_settings_desc),
                 onQuickTimeClicked = { showQuickTimeSlider.value = !showDialog },
@@ -167,7 +158,7 @@ class SettingsActivity : ComponentActivity() {
                 showTimeQuickSettingDialog = showDialog,
                 onQuickTimeValueSelected = { value ->
                     CoroutineScope(Dispatchers.IO).launch {
-                        dataStoreManager.setQuickSettingsTimeValue(value.toInt())
+                        timerViewModel.setQuickSettingsTimeValue(value.toInt())
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
@@ -179,197 +170,3 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SettingsActivityContent(
-    topAppBarTitle: String = "Preferences",
-    devModeTitle: String = "Dev Mode Enabled",
-    onDevModeChanged: (Boolean) -> Unit = {},
-    isDebugEnabled: Boolean = false,
-    quickTimeSettingTitle: String = "Quick Time Settings",
-    quickTimeSettingDescription: String = "Set the default time for the quick time settings",
-    onQuickTimeClicked: () -> Unit = {},
-    quickTimeSettingsValue: Int = 20,
-    showTimeQuickSettingDialog: Boolean = false,
-    onQuickTimeValueSelected: (Float) -> Unit = {},
-    onRemoveAdsClick: () -> Unit = {}
-) {
-    MusicTimerTheme(
-        darkTheme = isSystemInDarkTheme()
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-
-            val scrollBehavior =
-                TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = topAppBarTitle,
-                        showSettingsButton = false,
-                        scrollBehavior = scrollBehavior
-                    )
-                },
-            ) { innerPadding ->
-                SettingsActivitySubContent(
-                    innerPadding,
-                    devModeTitle,
-                    onDevModeChanged,
-                    isDebugEnabled,
-                    quickTimeSettingTitle,
-                    quickTimeSettingDescription,
-                    onQuickTimeClicked,
-                    quickTimeSettingsValue,
-                    showTimeQuickSettingDialog,
-                    onQuickTimeValueSelected,
-                    onRemoveAdsClick
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun SettingsActivitySubContent(
-    innerPadding: PaddingValues,
-    devModeTitle: String,
-    onDevModeChanged: (Boolean) -> Unit,
-    isDebugEnabled: Boolean,
-    quickTimeSettingTitle: String,
-    quickTimeSettingDescription: String,
-    onQuickTimeClicked: () -> Unit,
-    quickSettingsTimeValue: Int,
-    showTimeQuickSettingDialog: Boolean = false,
-    onQuickTimeValueSelected: (Float) -> Unit = {},
-    onRemoveAdsClick: () -> Unit = {}
-) {
-    Column(
-        modifier = Modifier
-            .wrapContentHeight()
-            .padding(innerPadding)
-    ) {
-        if (BuildConfig.DEBUG) {
-            DevModeOption(
-                devModeTitle,
-                onDevModeChanged,
-                isDebugEnabled
-            )
-        }
-        QuickSettingTimeValueOption(
-            quickTimeSettingTitle,
-            quickTimeSettingDescription,
-            onClick = onQuickTimeClicked,
-            value = quickSettingsTimeValue
-        )
-        if (showTimeQuickSettingDialog) TimeSelectionSlider(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp),
-            value = quickSettingsTimeValue.toFloat(),
-            valueRange = 1F..90F,
-            onValueChange = onQuickTimeValueSelected,
-            steps = 90,
-        )
-        RemoveAds(onClick = onRemoveAdsClick)
-    }
-}
-
-@Composable
-fun DevModeOption(
-    title: String,
-    onDevModeChanged: (Boolean) -> Unit,
-    isDebugEnabled: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.wrapContentSize(),
-            color = MaterialTheme.colorScheme.primary,
-            fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
-            fontSize = MaterialTheme.typography.titleMedium.fontSize
-        )
-        Switch(
-            modifier = Modifier.wrapContentSize(),
-            checked = isDebugEnabled,
-            onCheckedChange = onDevModeChanged
-        )
-    }
-}
-
-@Composable
-fun RemoveAds(onClick: () -> Unit = { }) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clickable { onClick() },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = CenterVertically,
-    ) {
-        Text(
-            text = "Remove ads",
-            modifier = Modifier.wrapContentSize(),
-            color = MaterialTheme.colorScheme.primary,
-            fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
-            fontSize = MaterialTheme.typography.titleMedium.fontSize
-        )
-    }
-}
-
-@Composable
-fun QuickSettingTimeValueOption(
-    quickTimeSettingTitle: String,
-    quickTimeSettingDescription: String,
-    onClick: () -> Unit,
-    value: Int
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clickable { onClick() },
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = CenterVertically,
-        ) {
-            Text(
-                text = quickTimeSettingTitle,
-                modifier = Modifier.wrapContentSize(),
-                color = MaterialTheme.colorScheme.primary,
-                fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
-                fontSize = MaterialTheme.typography.titleMedium.fontSize
-            )
-            Text(
-                modifier = Modifier.wrapContentSize(),
-                text = "$value min",
-                color = MaterialTheme.colorScheme.primary,
-                fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
-                fontSize = MaterialTheme.typography.titleMedium.fontSize
-            )
-        }
-        Text(
-            text = quickTimeSettingDescription,
-            modifier = Modifier.wrapContentSize(),
-            color = MaterialTheme.colorScheme.primary,
-            fontStyle = MaterialTheme.typography.bodySmall.fontStyle,
-            fontSize = MaterialTheme.typography.bodySmall.fontSize
-        )
-    }
-}
-
-@Preview
-@Composable
-fun SettingsActivityPreview() {
-    SettingsActivityContent()
-}

@@ -11,10 +11,12 @@ import com.jfalck.musictimer.presenter.viewmodel.AdsViewModel
 import com.jfalck.musictimer.presenter.viewmodel.TimerViewModel
 import com.jfalck.musictimer.presenter.wear.WearableMessageManager
 import com.jfalck.musictimer.usecase.GetLastTimeValueSelectedUseCase
+import com.jfalck.musictimer.usecase.GetQuickSettingsTimeValueUseCase
 import com.jfalck.musictimer.usecase.GetTileAdditionSuggestionUseCase
 import com.jfalck.musictimer.usecase.IncrementLaunchCountUseCase
 import com.jfalck.musictimer.usecase.IsPaidUserUseCase
 import com.jfalck.musictimer.usecase.SetLastTimeValueSelectedUseCase
+import com.jfalck.musictimer.usecase.SetQuickSettingsTimeValueUseCase
 import com.jfalck.musictimer.usecase.ShouldLoadInterstitialAdUseCase
 import com.jfalck.musictimer_common.common.wear.IWearMessageProcessor
 import com.jfalck.musictimer_common.di.CommonKoinModules.IO_DISPATCHER_NAME
@@ -49,13 +51,14 @@ object KoinModules {
         single<IncrementLaunchCountUseCase> { IncrementLaunchCountUseCase(get()) }
         single<ShouldLoadInterstitialAdUseCase> { ShouldLoadInterstitialAdUseCase(get()) }
         single<IsPaidUserUseCase> { IsPaidUserUseCase(get()) }
-
+        single<GetQuickSettingsTimeValueUseCase> { GetQuickSettingsTimeValueUseCase(get()) }
+        single<SetQuickSettingsTimeValueUseCase> { SetQuickSettingsTimeValueUseCase(get()) }
         // End Region
 
         //Region View Model
 
         viewModel<TimerViewModel> {
-            TimerViewModel(get(), get(), get(), get(), get())
+            TimerViewModel(get(), get(), get(), get(), get(), get(), get())
         }
         viewModel<AdsViewModel> {
             AdsViewModel(get(), get())

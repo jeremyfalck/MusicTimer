@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.googleServices)
     alias(libs.plugins.crashlytics)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 android {
@@ -92,6 +93,10 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material)
     implementation(libs.glance.material3)
+
+    implementation(libs.compose.navigation)
+
+    implementation(libs.kotlinSerialization)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
