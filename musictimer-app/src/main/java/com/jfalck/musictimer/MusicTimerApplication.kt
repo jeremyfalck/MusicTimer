@@ -13,6 +13,8 @@ class MusicTimerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        setTheme(R.style.Theme_MusicTimer_Starting)
         initKoin()
         initAds()
     }

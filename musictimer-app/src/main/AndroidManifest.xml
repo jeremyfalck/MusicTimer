@@ -17,7 +17,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MusicTimer"
+        android:theme="@style/Theme.MusicTimer.Starting"
         tools:targetApi="31">
 
         <service
@@ -96,7 +96,7 @@
         <activity
             android:name=".presenter.activity.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.MusicTimer">
+            android:theme="@style/Theme.MusicTimer.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

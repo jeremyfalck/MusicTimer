@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         initView()
@@ -128,7 +129,6 @@ class MainActivity : ComponentActivity() {
             ?.launch(Manifest.permission.POST_NOTIFICATIONS)
 
     private fun initView() {
-        installSplashScreen()
         setContent {
             notificationManager.SetPrimaryColor()
             val navController = rememberNavController()
@@ -157,6 +157,7 @@ class MainActivity : ComponentActivity() {
                 composable<SettingsScreen> {
                     SettingsScreen(
                         timerViewModel = timerViewModel,
+                        navController = navController,
                         onRemoveAdsClick = { billingManager.showBillingDialog(this@MainActivity) },
                         vibratorManager = vibratorManager,
                         textManager = textManager

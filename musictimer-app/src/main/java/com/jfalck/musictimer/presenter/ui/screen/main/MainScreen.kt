@@ -30,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.jfalck.musictimer.R
+import com.jfalck.musictimer.presenter.Previews
 import com.jfalck.musictimer.presenter.TextManager
 import com.jfalck.musictimer.presenter.ui.AdmobBanner
 import com.jfalck.musictimer.presenter.ui.component.CenterAlignedTopAppBar
@@ -143,6 +145,7 @@ fun MainActivityContent(
                 topBar = {
                     CenterAlignedTopAppBar(
                         title = topAppBarTitle,
+                        showBackButton = false,
                         showSettingsButton = true,
                         onSettingsClick = onSettingsClick,
                         scrollBehavior = scrollBehavior
@@ -219,11 +222,8 @@ fun MainActivitySubContent(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-@PreviewLightDark
-@PreviewDynamicColors
-@PreviewScreenSizes
+@Previews
 fun ActivityPreview() {
     MainActivityContent(
         SnackbarHostState(),
